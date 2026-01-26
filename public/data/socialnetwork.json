@@ -1,0 +1,16 @@
+{
+  "platforms": [
+    {
+      "name": "YouTube",
+      "url": "https://www.youtube.com/@%EB%B6%80%EC%82%B0%ED%80%B4%EC%96%B4%ED%96%89%EB%8F%99",
+      "icon": "youtube",
+      "color": "#FF0000"
+    },
+    {
+      "name": "Twitter",
+      "url": "https://x.com/busanqueeract",
+      "icon": "twitter",
+      "color": "#1DA1F2"
+    }
+  ]
+}

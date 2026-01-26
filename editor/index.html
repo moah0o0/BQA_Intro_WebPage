@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>부산퀴어행동 데이터 에디터</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.3/packages/wanted-sans/fonts/webfonts/variable/split/WantedSansVariable.min.css" />
+  <style>
+    :root {
+      --accent: #8B25FF;
+      --accent-hover: #7a1fe6;
+      --bg: #f5f5f5;
+      --card-bg: #ffffff;
+      --border: #e5e5e5;
+      --text: #1a1a1a;
+      --text-secondary: #666;
+      --success: #10b981;
+      --danger: #ef4444;
+      --camp-color: #ff6b6b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Wanted Sans Variable", "Wanted Sans", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      background: var(--text);
+      color: white;
+      padding: 16px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .header h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+    .btn-primary:hover { background: var(--accent-hover); }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+    }
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: rgba(255,255,255,0.5);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+    .btn-success:hover { background: #059669; }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+    .btn-danger:hover { background: #dc2626; }
+
+    .btn-outline {
+      background: white;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 0.8125rem;
+    }
+
+    /* Main Layout */
+    .main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    /* File Upload Area */
+    .upload-area {
+      background: var(--card-bg);
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 48px 24px;
+      text-align: center;
+      margin-bottom: 24px;
+      transition: all 0.2s;
+    }
+
+    .upload-area.dragover {
+      border-color: var(--accent);
+      background: rgba(139, 37, 255, 0.05);
+    }
+
+    .upload-area h2 {
+      font-size: 1.25rem;
+      margin-bottom: 8px;
+    }
+
+    .upload-area p {
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .upload-area input[type="file"] {
+      display: none;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      padding: 10px 20px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .tab:hover { border-color: var(--accent); }
+
+    .tab.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    /* Editor Section */
+    .editor-section {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-header h3 {
+      font-size: 1.125rem;
+      font-weight: 700;
+    }
+
+    /* Form Elements */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.9375rem;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    /* Item Cards */
+    .item-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .item-card.camp-card {
+      border-color: rgba(255, 107, 107, 0.3);
+      background: rgba(255, 107, 107, 0.03);
+    }
+
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .item-order {
+      font-weight: 700;
+      color: var(--accent);
+      font-size: 0.875rem;
+    }
+
+    .item-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Tags Input */
+    .tags-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      min-height: 44px;
+      cursor: text;
+    }
+
+    .tags-container:focus-within {
+      border-color: var(--accent);
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--accent);
+      color: white;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+    }
+
+    .tag button {
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+      padding: 0;
+      font-size: 1rem;
+      line-height: 1;
+      opacity: 0.7;
+    }
+
+    .tag button:hover { opacity: 1; }
+
+    .tag-input {
+      border: none;
+      outline: none;
+      flex: 1;
+      min-width: 120px;
+      font-size: 0.9375rem;
+      font-family: inherit;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-secondary);
+    }
+
+    /* Hidden */
+    .hidden { display: none !important; }
+
+    /* Tab Panels */
+    .tab-panel {
+      display: none;
+    }
+    .tab-panel.active {
+      display: block;
+    }
+
+    /* Mobile */
+    @media (max-width: 640px) {
+      .header {
+        padding: 12px 16px;
+      }
+      .header h1 {
+        font-size: 1rem;
+      }
+      .main {
+        padding: 16px;
+      }
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+      .tabs {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        padding-bottom: 8px;
+      }
+      .tab {
+        flex-shrink: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <h1>부산퀴어행동 데이터 에디터</h1>
+    <div class="header-actions">
+      <button class="btn btn-secondary" id="undoBtn" onclick="undo()" disabled>↶ 실행 취소</button>
+      <button class="btn btn-secondary" id="redoBtn" onclick="redo()" disabled>↷ 다시 실행</button>
+      <button class="btn btn-primary" onclick="exportJson()">JSON 내보내기</button>
+    </div>
+  </header>
+
+  <main class="main">
+    <!-- 파일 업로드 영역 -->
+    <div class="upload-area" id="uploadArea">
+      <h2>JSON 파일을 드래그하거나 클릭하여 업로드</h2>
+      <p>project_2026.json 파일을 불러와 편집할 수 있습니다</p>
+      <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">파일 선택</button>
+      <input type="file" id="fileInput" accept=".json" onchange="handleFileSelect(event)" />
+    </div>
+
+    <!-- 에디터 영역 -->
+    <div id="editorArea" class="hidden">
+      <!-- 탭 -->
+      <div class="tabs">
+        <button class="tab active" data-tab="overview" onclick="switchTab('overview')">개요</button>
+        <button class="tab" data-tab="programs" onclick="switchTab('programs')">정기모임 내용</button>
+        <button class="tab" data-tab="activities" onclick="switchTab('activities')">연계활동</button>
+        <button class="tab" data-tab="solidarity" onclick="switchTab('solidarity')">연대사업</button>
+        <button class="tab" data-tab="camp" onclick="switchTab('camp')">MT</button>
+        <button class="tab" data-tab="meetings" onclick="switchTab('meetings')">열린 회의</button>
+        <button class="tab" data-tab="clubs" onclick="switchTab('clubs')">소모임</button>
+      </div>
+
+      <!-- 개요 탭 -->
+      <div class="tab-panel active" id="panel-overview">
+        <div class="editor-section">
+          <div class="section-header">
+            <h3>기본 정보</h3>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>제목</label>
+              <input type="text" id="titleInput" oninput="updateData('title', this.value)" />
+            </div>
+            <div class="form-group">
+              <label>연도</label>
+              <input type="number" id="yearInput" oninput="updateData('year', parseInt(this.value))" />
+            </div>
+          </div>
+        </div>
+
+        <div class="editor-section">
+          <div class="section-header">
+            <h3>정기모임 개요</h3>
+          </div>
+          <div class="form-group">
+            <label>시기</label>
+            <input type="text" id="overviewPeriod" oninput="updateOverview('period', this.value)" />
+          </div>
+          <div class="form-group">
+            <label>일시</label>
+            <input type="text" id="overviewSchedule" oninput="updateOverview('schedule', this.value)" />
+          </div>
+          <div class="form-group">
+            <label>대상</label>
+            <input type="text" id="overviewTarget" oninput="updateOverview('target', this.value)" />
+          </div>
+        </div>
+
+        <div class="editor-section">
+          <div class="section-header">
+            <h3>목적 및 목표</h3>
+            <button class="btn btn-success btn-sm" onclick="addGoal()">+ 추가</button>
+          </div>
+          <div id="goalsContainer"></div>
+        </div>
+      </div>
+
+      <!-- 정기모임 내용 탭 -->
+      <div class="tab-panel" id="panel-programs">
+        <div class="editor-section">
+          <div class="section-header">
+            <h3>정기모임 내용</h3>
+            <button class="btn btn-success btn-sm" onclick="addProgram()">+ 추가</button>
+          </div>
+          <div id="programsContainer"></div>
+        </div>
+      </div>
+
+      <!-- 연계활동 탭 -->
+      <div class="tab-panel" id="panel-activities">
+        <div class="editor-section">
+          <div class="section-header">
+            <h3>정기모임 연계활동</h3>
+            <button class="btn btn-success btn-sm" onclick="addActivity()">+ 추가</button>
+          </div>
+          <div id="activitiesContainer"></div>
+        </div>
+      </div>
+
+      <!-- 연대사업 탭 -->
+      <div class="tab-panel" id="panel-solidarity">
+        <div class="editor-section">
+          <div class="section-header">
+            <h3>연대사업</h3>
+            <button class="btn btn-success btn-sm" onclick="addSolidarity()">+ 추가</button>
+          </div>
+          <div id="solidarityContainer"></div>
+        </div>
+      </div>
+
+      <!-- MT 탭 -->
+      <div class="tab-panel" id="panel-camp">
+        <div class="editor-section">
+          <div class="section-header">
+            <h3>MT / 캠프</h3>
+          </div>
+          <div class="form-group">
+            <label>제목</label>
+            <input type="text" id="campTitle" oninput="updateCamp('title', this.value)" />
+          </div>
+          <div class="form-group">
+            <label>일정</label>
+            <input type="text" id="campSchedule" oninput="updateCamp('schedule', this.value)" />
+          </div>
+          <div class="form-group">
+            <label>설명</label>
+            <input type="text" id="campDescription" oninput="updateCamp('description', this.value)" />
+          </div>
+          <div class="form-group">
+            <label>세부내용 (줄바꿈으로 구분)</label>
+            <textarea id="campDetails" rows="4" oninput="updateCampDetails(this.value)"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- 열린 회의 탭 -->
+      <div class="tab-panel" id="panel-meetings">
+        <div class="editor-section">
+          <div class="section-header">
+            <h3>열린 회의 및 교육</h3>
+            <button class="btn btn-success btn-sm" onclick="addMeeting()">+ 추가</button>
+          </div>
+          <div id="meetingsContainer"></div>
+        </div>
+      </div>
+
+      <!-- 소모임 탭 -->
+      <div class="tab-panel" id="panel-clubs">
+        <div class="editor-section">
+          <div class="section-header">
+            <h3>회원이 여는 소모임</h3>
+            <button class="btn btn-success btn-sm" onclick="addClub()">+ 추가</button>
+          </div>
+          <div id="clubsContainer"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    let jsonData = null;
+    let currentFile = 'project_2026.json';
+    let currentTab = 'overview';
+
+    // Undo/Redo
+    const history = [];
+    let historyIndex = -1;
+    const MAX_HISTORY = 50;
+
+    function saveToHistory() {
+      if (!jsonData) return;
+      if (historyIndex < history.length - 1) {
+        history.splice(historyIndex + 1);
+      }
+      history.push(JSON.stringify(jsonData));
+      if (history.length > MAX_HISTORY) {
+        history.shift();
+      } else {
+        historyIndex++;
+      }
+      updateUndoRedoButtons();
+      saveToLocalStorage();
+    }
+
+    function undo() {
+      if (historyIndex > 0) {
+        historyIndex--;
+        jsonData = JSON.parse(history[historyIndex]);
+        renderCurrentTab();
+        updateUndoRedoButtons();
+      }
+    }
+
+    function redo() {
+      if (historyIndex < history.length - 1) {
+        historyIndex++;
+        jsonData = JSON.parse(history[historyIndex]);
+        renderCurrentTab();
+        updateUndoRedoButtons();
+      }
+    }
+
+    function updateUndoRedoButtons() {
+      document.getElementById('undoBtn').disabled = historyIndex <= 0;
+      document.getElementById('redoBtn').disabled = historyIndex >= history.length - 1;
+    }
+
+    // 키보드 단축키
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.shiftKey ? redo() : undo();
+        e.preventDefault();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+        redo();
+        e.preventDefault();
+      }
+    });
+
+    // 드래그 앤 드롭
+    const uploadArea = document.getElementById('uploadArea');
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('dragover');
+    });
+    uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file && file.name.endsWith('.json')) {
+        currentFile = file.name;
+        readFile(file);
+      }
+    });
+
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (file) {
+        currentFile = file.name;
+        readFile(file);
+      }
+    }
+
+    function readFile(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          jsonData = JSON.parse(e.target.result);
+          history.length = 0;
+          historyIndex = -1;
+          saveToHistory();
+          showEditor();
+        } catch (err) {
+          alert('JSON 파싱 오류: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function saveToLocalStorage() {
+      if (!jsonData) return;
+      try {
+        localStorage.setItem('editorData2026', JSON.stringify({ jsonData, currentFile }));
+      } catch (e) {}
+    }
+
+    function loadFromLocalStorage() {
+      try {
+        const saved = localStorage.getItem('editorData2026');
+        if (saved) {
+          const data = JSON.parse(saved);
+          if (confirm('이전에 편집하던 데이터가 있습니다. 불러오시겠습니까?')) {
+            jsonData = data.jsonData;
+            currentFile = data.currentFile;
+            history.length = 0;
+            historyIndex = -1;
+            saveToHistory();
+            showEditor();
+            return true;
+          }
+        }
+      } catch (e) {}
+      return false;
+    }
+
+    window.addEventListener('DOMContentLoaded', loadFromLocalStorage);
+
+    function showEditor() {
+      document.getElementById('uploadArea').classList.add('hidden');
+      document.getElementById('editorArea').classList.remove('hidden');
+      renderCurrentTab();
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById(`panel-${tab}`).classList.add('active');
+      renderCurrentTab();
+    }
+
+    function renderCurrentTab() {
+      switch(currentTab) {
+        case 'overview': renderOverview(); break;
+        case 'programs': renderPrograms(); break;
+        case 'activities': renderActivities(); break;
+        case 'solidarity': renderSolidarity(); break;
+        case 'camp': renderCamp(); break;
+        case 'meetings': renderMeetings(); break;
+        case 'clubs': renderClubs(); break;
+      }
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // 디바운스
+    let debounceTimer = null;
+    function debouncedSave() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => saveToHistory(), 500);
+    }
+
+    function updateData(key, value) {
+      jsonData[key] = value;
+      debouncedSave();
+    }
+
+    function updateOverview(key, value) {
+      if (!jsonData.overview) jsonData.overview = {};
+      jsonData.overview[key] = value;
+      debouncedSave();
+    }
+
+    // 개요 렌더링
+    function renderOverview() {
+      document.getElementById('titleInput').value = jsonData.title || '';
+      document.getElementById('yearInput').value = jsonData.year || '';
+      document.getElementById('overviewPeriod').value = jsonData.overview?.period || '';
+      document.getElementById('overviewSchedule').value = jsonData.overview?.schedule || '';
+      document.getElementById('overviewTarget').value = jsonData.overview?.target || '';
+      renderGoals();
+    }
+
+    function renderGoals() {
+      const container = document.getElementById('goalsContainer');
+      const goals = jsonData.goals || [];
+      if (goals.length === 0) {
+        container.innerHTML = '<div class="empty-state">목표를 추가하세요</div>';
+        return;
+      }
+      container.innerHTML = goals.map((goal, idx) => `
+        <div class="item-card">
+          <div class="item-header">
+            <span class="item-order">#${idx + 1}</span>
+            <div class="item-actions">
+              <button class="btn btn-danger btn-sm" onclick="removeGoal(${idx})">삭제</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <input type="text" value="${escapeHtml(goal)}" oninput="updateGoal(${idx}, this.value)" />
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function addGoal() {
+      if (!jsonData.goals) jsonData.goals = [];
+      jsonData.goals.push('새 목표');
+      saveToHistory();
+      renderGoals();
+    }
+
+    function updateGoal(idx, value) {
+      jsonData.goals[idx] = value;
+      debouncedSave();
+    }
+
+    function removeGoal(idx) {
+      jsonData.goals.splice(idx, 1);
+      saveToHistory();
+      renderGoals();
+    }
+
+    // 프로그램 렌더링
+    function renderPrograms() {
+      const container = document.getElementById('programsContainer');
+      const programs = jsonData.programs || [];
+      if (programs.length === 0) {
+        container.innerHTML = '<div class="empty-state">프로그램을 추가하세요</div>';
+        return;
+      }
+      container.innerHTML = programs.map((p, idx) => `
+        <div class="item-card">
+          <div class="item-header">
+            <span class="item-order">#${idx + 1} ${escapeHtml(p.title || '')}</span>
+            <div class="item-actions">
+              <button class="btn btn-outline btn-sm" onclick="moveProgram(${idx}, -1)" ${idx === 0 ? 'disabled' : ''}>위로</button>
+              <button class="btn btn-outline btn-sm" onclick="moveProgram(${idx}, 1)" ${idx === programs.length - 1 ? 'disabled' : ''}>아래로</button>
+              <button class="btn btn-danger btn-sm" onclick="removeProgram(${idx})">삭제</button>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group" style="flex:2">
+              <label>제목</label>
+              <input type="text" value="${escapeHtml(p.title || '')}" oninput="updateProgram(${idx}, 'title', this.value)" />
+            </div>
+            <div class="form-group">
+              <label>일정</label>
+              <input type="text" value="${escapeHtml(p.schedule || '')}" oninput="updateProgram(${idx}, 'schedule', this.value)" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>요약</label>
+            <input type="text" value="${escapeHtml(p.summary || '')}" oninput="updateProgram(${idx}, 'summary', this.value)" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>모달 사용</label>
+              <select onchange="updateProgram(${idx}, 'is_modal', this.value === 'true')">
+                <option value="true" ${p.is_modal ? 'selected' : ''}>예</option>
+                <option value="false" ${!p.is_modal ? 'selected' : ''}>아니오</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>상세 내용 (줄바꿈으로 구분, HTML 지원)</label>
+            <textarea rows="4" oninput="updateProgramDetails(${idx}, this.value)">${(p.details || []).join('\n')}</textarea>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function addProgram() {
+      if (!jsonData.programs) jsonData.programs = [];
+      jsonData.programs.push({
+        id: `program-${Date.now()}`,
+        order: jsonData.programs.length + 1,
+        title: '새 프로그램',
+        schedule: '',
+        summary: '',
+        is_modal: true,
+        details: []
+      });
+      saveToHistory();
+      renderPrograms();
+    }
+
+    function updateProgram(idx, key, value) {
+      jsonData.programs[idx][key] = value;
+      debouncedSave();
+    }
+
+    function updateProgramDetails(idx, value) {
+      jsonData.programs[idx].details = value.split('\n').filter(l => l.trim());
+      debouncedSave();
+    }
+
+    function moveProgram(idx, dir) {
+      const newIdx = idx + dir;
+      if (newIdx < 0 || newIdx >= jsonData.programs.length) return;
+      [jsonData.programs[idx], jsonData.programs[newIdx]] = [jsonData.programs[newIdx], jsonData.programs[idx]];
+      jsonData.programs.forEach((p, i) => p.order = i + 1);
+      saveToHistory();
+      renderPrograms();
+    }
+
+    function removeProgram(idx) {
+      if (confirm('삭제하시겠습니까?')) {
+        jsonData.programs.splice(idx, 1);
+        jsonData.programs.forEach((p, i) => p.order = i + 1);
+        saveToHistory();
+        renderPrograms();
+      }
+    }
+
+    // 연계활동 렌더링
+    function renderActivities() {
+      const container = document.getElementById('activitiesContainer');
+      const items = jsonData.linked_activities || [];
+      if (items.length === 0) {
+        container.innerHTML = '<div class="empty-state">연계활동을 추가하세요</div>';
+        return;
+      }
+      container.innerHTML = items.map((a, idx) => `
+        <div class="item-card">
+          <div class="item-header">
+            <span class="item-order">${escapeHtml(a.date || '')} - ${escapeHtml(a.title || '')}</span>
+            <div class="item-actions">
+              <button class="btn btn-danger btn-sm" onclick="removeActivity(${idx})">삭제</button>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>날짜</label>
+              <input type="text" value="${escapeHtml(a.date || '')}" oninput="updateActivity(${idx}, 'date', this.value)" />
+            </div>
+            <div class="form-group" style="flex:2">
+              <label>제목</label>
+              <input type="text" value="${escapeHtml(a.title || '')}" oninput="updateActivity(${idx}, 'title', this.value)" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>설명</label>
+            <input type="text" value="${escapeHtml(a.description || '')}" oninput="updateActivity(${idx}, 'description', this.value)" />
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function addActivity() {
+      if (!jsonData.linked_activities) jsonData.linked_activities = [];
+      jsonData.linked_activities.push({
+        id: `activity-${Date.now()}`,
+        date: '',
+        title: '새 활동',
+        description: ''
+      });
+      saveToHistory();
+      renderActivities();
+    }
+
+    function updateActivity(idx, key, value) {
+      jsonData.linked_activities[idx][key] = value;
+      debouncedSave();
+    }
+
+    function removeActivity(idx) {
+      if (confirm('삭제하시겠습니까?')) {
+        jsonData.linked_activities.splice(idx, 1);
+        saveToHistory();
+        renderActivities();
+      }
+    }
+
+    // 연대사업 렌더링
+    function renderSolidarity() {
+      const container = document.getElementById('solidarityContainer');
+      const items = jsonData.solidarity_activities || [];
+      if (items.length === 0) {
+        container.innerHTML = '<div class="empty-state">연대사업을 추가하세요</div>';
+        return;
+      }
+      container.innerHTML = items.map((s, idx) => `
+        <div class="item-card">
+          <div class="item-header">
+            <span class="item-order">${escapeHtml(s.title || '')}</span>
+            <div class="item-actions">
+              <button class="btn btn-danger btn-sm" onclick="removeSolidarity(${idx})">삭제</button>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>날짜</label>
+              <input type="text" value="${escapeHtml(s.date || '')}" oninput="updateSolidarity(${idx}, 'date', this.value)" />
+            </div>
+            <div class="form-group">
+              <label>상태</label>
+              <input type="text" value="${escapeHtml(s.status || '')}" oninput="updateSolidarity(${idx}, 'status', this.value)" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>제목</label>
+            <input type="text" value="${escapeHtml(s.title || '')}" oninput="updateSolidarity(${idx}, 'title', this.value)" />
+          </div>
+          <div class="form-group">
+            <label>설명</label>
+            <textarea rows="3" oninput="updateSolidarity(${idx}, 'description', this.value)">${escapeHtml(s.description || '')}</textarea>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function addSolidarity() {
+      if (!jsonData.solidarity_activities) jsonData.solidarity_activities = [];
+      jsonData.solidarity_activities.push({
+        id: `solidarity-${Date.now()}`,
+        date: '',
+        title: '새 연대사업',
+        description: '',
+        status: ''
+      });
+      saveToHistory();
+      renderSolidarity();
+    }
+
+    function updateSolidarity(idx, key, value) {
+      jsonData.solidarity_activities[idx][key] = value;
+      debouncedSave();
+    }
+
+    function removeSolidarity(idx) {
+      if (confirm('삭제하시겠습니까?')) {
+        jsonData.solidarity_activities.splice(idx, 1);
+        saveToHistory();
+        renderSolidarity();
+      }
+    }
+
+    // 캠프 렌더링
+    function renderCamp() {
+      const camp = jsonData.camp || {};
+      document.getElementById('campTitle').value = camp.title || '';
+      document.getElementById('campSchedule').value = camp.schedule || '';
+      document.getElementById('campDescription').value = camp.description || '';
+      document.getElementById('campDetails').value = (camp.details || []).join('\n');
+    }
+
+    function updateCamp(key, value) {
+      if (!jsonData.camp) jsonData.camp = {};
+      jsonData.camp[key] = value;
+      debouncedSave();
+    }
+
+    function updateCampDetails(value) {
+      if (!jsonData.camp) jsonData.camp = {};
+      jsonData.camp.details = value.split('\n').filter(l => l.trim());
+      debouncedSave();
+    }
+
+    // 열린 회의 렌더링
+    function renderMeetings() {
+      const container = document.getElementById('meetingsContainer');
+      const items = jsonData.open_meetings || [];
+      if (items.length === 0) {
+        container.innerHTML = '<div class="empty-state">열린 회의/교육을 추가하세요</div>';
+        return;
+      }
+      container.innerHTML = items.map((m, idx) => `
+        <div class="item-card">
+          <div class="item-header">
+            <span class="item-order">${escapeHtml(m.title || '')}</span>
+            <div class="item-actions">
+              <button class="btn btn-danger btn-sm" onclick="removeMeeting(${idx})">삭제</button>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group" style="flex:2">
+              <label>제목</label>
+              <input type="text" value="${escapeHtml(m.title || '')}" oninput="updateMeeting(${idx}, 'title', this.value)" />
+            </div>
+            <div class="form-group">
+              <label>일정</label>
+              <input type="text" value="${escapeHtml(m.schedule || '')}" oninput="updateMeeting(${idx}, 'schedule', this.value)" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>설명</label>
+            <input type="text" value="${escapeHtml(m.description || '')}" oninput="updateMeeting(${idx}, 'description', this.value)" />
+          </div>
+          <div class="form-group">
+            <label>모달 사용</label>
+            <select onchange="updateMeeting(${idx}, 'is_modal', this.value === 'true')">
+              <option value="true" ${m.is_modal ? 'selected' : ''}>예</option>
+              <option value="false" ${!m.is_modal ? 'selected' : ''}>아니오</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>상세 내용 (줄바꿈으로 구분, HTML 지원)</label>
+            <textarea rows="4" oninput="updateMeetingDetails(${idx}, this.value)">${(m.details || []).join('\n')}</textarea>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function addMeeting() {
+      if (!jsonData.open_meetings) jsonData.open_meetings = [];
+      jsonData.open_meetings.push({
+        id: `open-${Date.now()}`,
+        title: '새 회의/교육',
+        schedule: '',
+        is_modal: false,
+        description: '',
+        details: []
+      });
+      saveToHistory();
+      renderMeetings();
+    }
+
+    function updateMeeting(idx, key, value) {
+      jsonData.open_meetings[idx][key] = value;
+      debouncedSave();
+    }
+
+    function updateMeetingDetails(idx, value) {
+      jsonData.open_meetings[idx].details = value.split('\n').filter(l => l.trim());
+      debouncedSave();
+    }
+
+    function removeMeeting(idx) {
+      if (confirm('삭제하시겠습니까?')) {
+        jsonData.open_meetings.splice(idx, 1);
+        saveToHistory();
+        renderMeetings();
+      }
+    }
+
+    // 소모임 렌더링
+    function renderClubs() {
+      const container = document.getElementById('clubsContainer');
+      const items = jsonData.sub_clubs || [];
+      if (items.length === 0) {
+        container.innerHTML = '<div class="empty-state">소모임을 추가하세요</div>';
+        return;
+      }
+      container.innerHTML = items.map((c, idx) => `
+        <div class="item-card">
+          <div class="item-header">
+            <span class="item-order">${escapeHtml(c.name || '')}</span>
+            <div class="item-actions">
+              <button class="btn btn-danger btn-sm" onclick="removeClub(${idx})">삭제</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>이름</label>
+            <input type="text" value="${escapeHtml(c.name || '')}" oninput="updateClub(${idx}, 'name', this.value)" />
+          </div>
+          <div class="form-group">
+            <label>설명</label>
+            <input type="text" value="${escapeHtml(c.description || '')}" oninput="updateClub(${idx}, 'description', this.value)" />
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function addClub() {
+      if (!jsonData.sub_clubs) jsonData.sub_clubs = [];
+      jsonData.sub_clubs.push({
+        id: `club-${Date.now()}`,
+        name: '새 소모임',
+        description: ''
+      });
+      saveToHistory();
+      renderClubs();
+    }
+
+    function updateClub(idx, key, value) {
+      jsonData.sub_clubs[idx][key] = value;
+      debouncedSave();
+    }
+
+    function removeClub(idx) {
+      if (confirm('삭제하시겠습니까?')) {
+        jsonData.sub_clubs.splice(idx, 1);
+        saveToHistory();
+        renderClubs();
+      }
+    }
+
+    // JSON 내보내기
+    function exportJson() {
+      if (!jsonData) {
+        alert('먼저 데이터를 불러오세요.');
+        return;
+      }
+      // 버전 업데이트
+      jsonData.lastUpdated = new Date().toISOString().split('T')[0];
+
+      const blob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = currentFile;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>

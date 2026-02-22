@@ -261,6 +261,10 @@ const scrollToDonate = () => {
   --spacing-xl: 32px;
 }
 
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
@@ -304,7 +308,6 @@ button, a, [role="button"] {
 .section-inner {
   max-width: 640px;
   margin: 0 auto;
-  overflow: hidden;
 }
 
 /* 활동과 계획 섹션 */
@@ -316,7 +319,6 @@ button, a, [role="button"] {
   max-width: 640px;
   margin: 0 auto;
   padding: 40px 28px 90px;
-  overflow: hidden;
 }
 
 /* 함께하기 섹션 */

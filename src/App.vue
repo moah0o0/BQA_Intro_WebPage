@@ -304,6 +304,7 @@ button, a, [role="button"] {
 .section-inner {
   max-width: 640px;
   margin: 0 auto;
+  overflow: hidden;
 }
 
 /* 활동과 계획 섹션 */
@@ -315,6 +316,7 @@ button, a, [role="button"] {
   max-width: 640px;
   margin: 0 auto;
   padding: 40px 28px 90px;
+  overflow: hidden;
 }
 
 /* 함께하기 섹션 */
@@ -454,6 +456,8 @@ button, a, [role="button"] {
   font-size: 0.9375rem;
   letter-spacing: -0.02em;
   min-height: 200px;
+  overflow-wrap: break-word;
+  word-break: keep-all;
 }
 .join-content h3 {
   font-size: 1.25rem;

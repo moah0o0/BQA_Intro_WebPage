@@ -18,7 +18,7 @@
             </div>
           </div>
           <div v-if="post.photos && post.photos.length" class="feed-cover">
-            <img :src="post.photos[0]" :alt="post.subtitle" />
+            <img :src="post.photos[0]" :alt="post.subtitle" loading="lazy" />
             <span v-if="post.photos.length > 1" class="feed-photo-count">{{ post.photos.length }}장</span>
           </div>
           <div class="feed-caption">
@@ -114,7 +114,7 @@
         <h4 class="extras-heading">2026 부산퀴어행동을 이끌 사람들</h4>
         <div class="leaders-grid">
           <div v-for="leader in data.leaders" :key="leader.id" class="leader-card">
-            <img :src="leader.photo" :alt="leader.name" class="leader-photo" />
+            <img :src="leader.photo" :alt="leader.name" class="leader-photo" loading="lazy" />
             <div class="leader-info">
               <span class="leader-name">{{ leader.name }}</span>
               <span class="leader-role">{{ leader.role }}</span>
@@ -135,8 +135,11 @@
       <p class="post-description">{{ postModalData.description }}</p>
 
       <div v-if="postModalData.photos && postModalData.photos.length" class="post-gallery">
-        <div class="post-gallery-main">
-          <img :src="postModalData.photos[currentPostPhoto]" alt="활동 사진" />
+        <div class="post-gallery-main"
+            @touchstart="onSwipeStart"
+            @touchmove="onSwipeMove"
+            @touchend="onSwipeEnd">
+          <img :src="postModalData.photos[currentPostPhoto]" alt="활동 사진" loading="lazy" draggable="false" />
           <button v-if="postModalData.photos.length > 1" class="photo-nav prev" @click="prevPostPhoto">&lt;</button>
           <button v-if="postModalData.photos.length > 1" class="photo-nav next" @click="nextPostPhoto">&gt;</button>
         </div>
@@ -292,6 +295,36 @@ const nextPostPhoto = () => {
 const prevPostPhoto = () => {
   const total = postModalData.value.photos.length;
   currentPostPhoto.value = currentPostPhoto.value === 0 ? total - 1 : currentPostPhoto.value - 1;
+};
+
+// 스와이프 제스처
+let swipeStartX = 0;
+let swipeStartY = 0;
+
+const onSwipeStart = (e) => {
+  swipeStartX = e.touches[0].clientX;
+  swipeStartY = e.touches[0].clientY;
+};
+
+const onSwipeMove = (e) => {
+  if (!swipeStartX) return;
+  const diffX = Math.abs(e.touches[0].clientX - swipeStartX);
+  const diffY = Math.abs(e.touches[0].clientY - swipeStartY);
+  if (diffX > diffY && diffX > 10) {
+    e.preventDefault();
+  }
+};
+
+const onSwipeEnd = (e) => {
+  if (!swipeStartX) return;
+  const diffX = e.changedTouches[0].clientX - swipeStartX;
+  const diffY = Math.abs(e.changedTouches[0].clientY - swipeStartY);
+  if (Math.abs(diffX) > 50 && Math.abs(diffX) > diffY) {
+    if (diffX < 0) nextPostPhoto();
+    else prevPostPhoto();
+  }
+  swipeStartX = 0;
+  swipeStartY = 0;
 };
 
 // PlanProject 카드 모달
@@ -490,6 +523,9 @@ watch(() => props.data, () => {
   background: #f0f0f0;
   border-radius: var(--radius-md, 8px);
   overflow: hidden;
+  touch-action: pan-y pinch-zoom;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .post-gallery-main img {
@@ -843,6 +879,7 @@ watch(() => props.data, () => {
   gap: 8px;
   width: 100%;
   padding: 14px 16px;
+  min-height: 48px;
   background: none;
   border: none;
   cursor: pointer;
@@ -853,6 +890,7 @@ watch(() => props.data, () => {
   line-height: 1.4;
   text-align: left;
   transition: background 0.15s ease;
+  font-family: inherit;
 }
 
 .extra-title:hover {
@@ -981,7 +1019,7 @@ watch(() => props.data, () => {
   /* 사진 갤러리 */
   .post-gallery-main img { max-height: 300px; }
   .post-gallery-thumbs img { width: 48px; height: 48px; }
-  .photo-nav { width: 40px; height: 40px; font-size: 18px; }
+  .photo-nav { width: 44px; height: 44px; font-size: 18px; }
   .photo-nav.prev { left: 8px; }
   .photo-nav.next { right: 8px; }
 

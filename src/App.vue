@@ -263,6 +263,8 @@ const scrollToDonate = () => {
 
 html {
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -279,6 +281,12 @@ body {
   letter-spacing: -0.02em;
   word-break: keep-all;
   overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 터치 타겟 최소 크기 보장 */
+button, a, [role="button"] {
+  touch-action: manipulation;
 }
 
 .app-root {
@@ -358,6 +366,8 @@ body {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
 }
 
 .sticky-nav-inner {
@@ -575,7 +585,7 @@ body {
 /* ===== 다크 푸터 ===== */
 .site-footer {
   background: #1a1a1a;
-  padding: 60px 28px 48px;
+  padding: 60px 28px calc(48px + env(safe-area-inset-bottom, 0px));
   text-align: center;
   color: #ffffff;
 }
@@ -588,7 +598,8 @@ body {
 .footer-social {
   display: flex;
   justify-content: center;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
   margin: 32px 0;
 }
 .footer-social-link {
@@ -636,8 +647,8 @@ body {
 /* ===== 후원 플로팅 버튼 ===== */
 .donate-floating-btn {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  right: calc(24px + env(safe-area-inset-right, 0px));
   width: 60px;
   height: 60px;
   border-radius: 50%;
@@ -719,9 +730,13 @@ body {
   .site-footer {
     padding: 48px 20px 40px;
   }
+  .footer-social-link {
+    padding: 10px 16px;
+    font-size: 0.8125rem;
+  }
   .donate-floating-btn {
-    bottom: 16px;
-    right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    right: calc(16px + env(safe-area-inset-right, 0px));
     width: 56px;
     height: 56px;
     font-size: 26px;

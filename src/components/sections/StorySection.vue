@@ -270,6 +270,7 @@ onUnmounted(() => {
 .cta-btn {
   display: inline-block;
   padding: 14px 28px;
+  min-height: 48px;
   background: var(--accent-color, #8B25FF);
   color: #fff;
   border: none;
@@ -295,6 +296,8 @@ onUnmounted(() => {
 @media (max-width: 640px) {
   .story {
     padding: 60px 20px 70px;
+    padding-left: max(20px, env(safe-area-inset-left, 0px));
+    padding-right: max(20px, env(safe-area-inset-right, 0px));
   }
   .block {
     margin-bottom: 40px;
@@ -309,8 +312,15 @@ onUnmounted(() => {
   .stat-card {
     padding: 16px 10px;
   }
+  .stat-label {
+    font-size: 0.75rem;
+  }
   .stat-value {
     font-size: 1.75rem;
+  }
+  .cta-btn {
+    width: 100%;
+    text-align: center;
   }
 }
 

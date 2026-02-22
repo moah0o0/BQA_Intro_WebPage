@@ -129,6 +129,8 @@ onUnmounted(() => {
   justify-content: center;
   align-items: center;
   padding: 80px 28px 40px;
+  padding-left: max(28px, env(safe-area-inset-left, 0px));
+  padding-right: max(28px, env(safe-area-inset-right, 0px));
 }
 
 .hero-content {
@@ -177,6 +179,7 @@ onUnmounted(() => {
   font-weight: 300;
   color: var(--accent-color, #8B25FF);
   animation: blink 0.6s step-end infinite;
+  will-change: opacity;
 }
 
 @keyframes blink {
@@ -252,6 +255,8 @@ onUnmounted(() => {
 @media (max-width: 640px) {
   .hero {
     padding: 60px 20px 32px;
+    padding-left: max(20px, env(safe-area-inset-left, 0px));
+    padding-right: max(20px, env(safe-area-inset-right, 0px));
   }
   .pre-line {
     font-size: 1.4rem;
@@ -277,6 +282,18 @@ onUnmounted(() => {
   }
   .main-line {
     font-size: 1.8rem;
+  }
+}
+
+/* 가로모드 대응 */
+@media (max-height: 500px) and (orientation: landscape) {
+  .hero {
+    min-height: auto;
+    padding-top: 40px;
+    padding-bottom: 24px;
+  }
+  .origin-story {
+    margin-top: 20px;
   }
 }
 </style>

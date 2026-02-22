@@ -1032,13 +1032,8 @@ watch(() => props.data, () => {
   .plan-card-body { font-size: 0.875rem; line-height: 1.6; }
   .plan-card-cta { font-size: 0.8125rem; margin-top: 12px; padding-top: 10px; }
 
-  /* half 카드 모바일 최적화 */
-  .plan-card.half { width: calc(50% - 6px); }
-  .plan-card.half .plan-card-icon { font-size: 1.75rem; margin-bottom: 10px; }
-  .plan-card.half .plan-card-title { font-size: 0.875rem; }
-  .plan-card.half .plan-card-subtitle { font-size: 0.625rem; margin-bottom: 10px; }
-  .plan-card.half .plan-card-body { font-size: 0.75rem; line-height: 1.5; }
-  .plan-card.half .plan-card-cta { font-size: 0.6875rem; }
+  /* half 카드 모바일: 1열로 변경 */
+  .plan-card.half { width: 100%; }
 
   /* 아코디언 */
   .extra-title { padding: 12px 14px; font-size: 0.875rem; }

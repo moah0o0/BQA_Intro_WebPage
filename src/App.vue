@@ -1,20 +1,95 @@
 <template>
-  <div class="app-container">
-    <header class="main-header">
-      <img src="./assets/logo.png" alt="부산퀴어행동 로고" class="logo" />
-    </header>
+  <div class="app-root">
+    <!-- 스토리텔링 섹션 -->
+    <HeroSection />
+    <StorySection @openManifesto="openManifestoFull" />
 
-    <main>
-     <section class="section social-section">
-        <div class="social-buttons">
+    <!-- 활동과 계획 -->
+    <section class="activities-section">
+      <!-- 스티키 탭 네비게이션 -->
+      <nav class="sticky-nav" ref="stickyNavRef">
+        <div class="sticky-nav-inner">
+          <button
+            v-for="project in projectList"
+            :key="project.year"
+            :class="{ active: currentProject.year === project.year }"
+            @click="selectProject(project)"
+          >
+            {{ project.year }}년 {{ project.type === 'PlanProject' ? '활동계획' : '활동보고' }}
+          </button>
+        </div>
+      </nav>
+
+      <div class="activities-content">
+        <p v-if="currentProject.type === 'DoneProject'" class="plan-intro">
+          12·3 내란 이후, 부산지역 윤석열 퇴진광장에서 성소수자들은
+          매주 뒤풀이를 하고, 존재를 당당히 드러내는 깃발을 들고서 '무지개존'을 꾸려가며
+          서로에게 든든한 곁이 되어 왔습니다.
+          하지만 연대의 광장이 닫힌 이후, 마주해야 하는 것은
+          차별과 혐오의 세상과 불화해야 하는 삶이었습니다.
+          그래서 2025년 2월 28일, 일상 속에서 서로의 용기가 되어주기로 다짐하며,
+          부산퀴어행동을 발족하게 되었습니다.
+        </p>
+
+        <p v-if="currentProject.type === 'PlanProject'" class="plan-intro muted">
+          퀴어 노동의 문제를 해결하기 위한 조사와 요구, 실천에 본격적으로 나서려면
+          <mark>함께할 사람들이 먼저 모여야 합니다.</mark>
+          일하고 공부하며 살아가는 퀴어들이
+          부담 없이 찾아올 수 있도록 <mark>문턱 낮고 재미있는 모임</mark>을 함께 열어봅시다!
+        </p>
+
+        <ProjectViewer v-if="currentProject" :data="currentProject" :key="currentProject.title" />
+      </div>
+    </section>
+
+    <!-- 함께하기 -->
+    <section class="section-wrap join-section">
+      <div class="section-inner">
+        <span class="join-tag">함께하기</span>
+        <h2 class="join-title">부산퀴어행동에<br>함께해주세요</h2>
+
+        <div class="join-tabs">
+          <button
+            class="join-tab-btn"
+            :class="{ active: joinType === 'member' }"
+            @click="joinType = 'member'"
+          >회원가입</button>
+          <button
+            class="join-tab-btn"
+            :class="{ active: joinType === 'supporter' }"
+            @click="joinType = 'supporter'"
+          >후원하기</button>
+        </div>
+
+        <div class="join-content">
+          <Transition name="tab" mode="out-in">
+            <div v-if="joinType === 'member' && memberText" key="member" v-html="memberText"></div>
+            <div v-else-if="joinType === 'supporter'" key="supporter">
+              <div v-if="supporterText" v-html="supporterText"></div>
+              <div class="donate-card">
+                <p class="donate-label">후원계좌</p>
+                <p class="donate-account">우체국 100-0003-05297</p>
+                <p class="donate-depositor">예금주 : 김찬(부산퀴어행동)</p>
+                <button class="donate-copy-btn" @click="copyAccount">계좌 복사</button>
+                <p class="donate-note"><em>단체의 경우, 후원확인증 발급 가능</em></p>
+              </div>
+            </div>
+          </Transition>
+        </div>
+      </div>
+    </section>
+
+    <!-- 푸터 -->
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-social">
           <a
             v-for="platform in socialNetworks"
             :key="platform.name"
             :href="platform.url"
             target="_blank"
             rel="noopener noreferrer"
-            class="social-btn"
-            :style="{ '--platform-color': platform.color }"
+            class="footer-social-link"
           >
             <svg v-if="platform.icon === 'youtube'" class="social-icon" viewBox="0 0 24 24" fill="currentColor">
               <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
@@ -25,88 +100,23 @@
             <span>{{ platform.name }}</span>
           </a>
         </div>
-      </section>
-      <section class="section manifesto-section">
-        <div class="intro-text">
-          <p>
-            12·3 내란 이후, 부산지역 윤석열 퇴진광장에서 성소수자들은 매주 뒤풀이를 하고, 존재를 당당히 드러내는 깃발을 들고서 '무지개 깃발존'을 꾸려가며 내란청산을 향한 서로의 든든한 곁이 되어 왔습니다. 하지만 연대의 광장이 닫힌 이후, 마주해야 하는 것은 차별과 혐오의 세상과 불화해야 하는 삶이었습니다. 그래서 일상 속에서 <strong>흩어지지 말고 함께 연대하고 실천하자</strong>며 부산퀴어행동을 발족하게 되었습니다.
-          </p>
-        </div>
 
-        <div class="manifesto-list" v-if="Object.keys(manifestoData).length > 0">
-          <div class="mf-item" @click="openManifestoModal('다짐', manifestoData['다짐'])">
-            <span class="mf-label">2026년~2028년 부산퀴어행동의 다짐</span>
-            <p>{{ manifestoData['다짐'].summary }}</p>
-            <span class="mf-arrow">→</span>
-          </div>
-        </div>
-      </section>
-
-      <hr class="divider">
-
-      <section class="section project-section">
-        <h2 class="section-title">활동과 계획</h2>
-        
-        <div class="tab-buttons">
-          <button
-            v-for="project in projectList"
-            :key="project.year"
-            :class="{ active: currentProject.year === project.year }"
-            @click="currentProject = project"
-          >
-            {{ project.year }}년 {{ project.type === 'PlanProject' ? '계획' : '결과' }}
-          </button>
-        </div>
-
-        <ProjectViewer v-if="currentProject" :data="currentProject" :key="currentProject.title" />
-      </section>
-      
-      <hr class="divider"></hr>
-
-      <section class="section join-section">
-        <h2 class="section-title">함께하기</h2>
-        
-        <div class="join-tabs">
-          <div class="join-option" :class="{ active: joinType === 'member' }" @click="joinType = 'member'">
-            <span>회원으로</span>
-          </div>
-          <div class="join-option" :class="{ active: joinType === 'supporter' }" @click="joinType = 'supporter'">
-            <span>후원자로</span>
-          </div>
-        </div>
-
-        <div class="join-content">
-          <div v-if="joinType === 'member' && memberText" class="fade-in" v-html="memberText"></div>
-          <div v-if="joinType === 'supporter' && supporterText" class="fade-in" v-html="supporterText"></div>
-        </div>
-      </section>
-
- 
-      <footer class="footer">
-        <div class="bank-info" ref="bankInfoSection">
-          <p class="bank-label">후원계좌</p>
-          <p class="bank-number">
-            우체국 100-0003-05297<br>
-            <span class="depositor">예금주 : 김찬(부산퀴어행동)</span>
-          </p>
-          <button class="copy-btn" @click="copyAccount">계좌 복사</button>
-        </div>
         <div class="footer-info">
           <p class="footer-name">부산퀴어행동</p>
           <p class="footer-contact">문의 : busanqueeract@gmail.com</p>
         </div>
-      </footer>
-    </main>
+      </div>
+    </footer>
 
     <!-- 후원 플로팅 버튼 -->
     <button class="donate-floating-btn" @click="scrollToDonate" title="후원하기">
       👛
     </button>
 
+    <!-- 다짐 모달 -->
     <BaseModal :is-open="isManifestoModalOpen" :title="manifestoModalTitle" @close="isManifestoModalOpen = false">
       <p v-html="manifestoModalContent"></p>
     </BaseModal>
-
   </div>
 </template>
 
@@ -114,25 +124,27 @@
 import { ref, onMounted } from 'vue';
 import ProjectViewer from './components/ProjectViewer.vue';
 import BaseModal from './components/BaseModal.vue';
+import HeroSection from './components/sections/HeroSection.vue';
+import StorySection from './components/sections/StorySection.vue';
 
 // 데이터 상태
 const manifestoData = ref({});
-const projectList = ref([]); // 모든 프로젝트 데이터
+const projectList = ref([]);
 const memberText = ref('');
 const supporterText = ref('');
 const socialNetworks = ref([]);
 
 // View 상태 관리
-const currentProject = ref({}); // 기본값: 로드 후 설정
-const joinType = ref('member'); // member or supporter
+const currentProject = ref({});
+const joinType = ref('member');
 
 // 모달 로직
 const isManifestoModalOpen = ref(false);
 const manifestoModalTitle = ref('');
 const manifestoModalContent = ref('');
 
-// 후원 섹션 ref
-const bankInfoSection = ref(null);
+// refs
+const stickyNavRef = ref(null);
 
 // 프로젝트 설정 파일에서 설정 불러오기
 const loadProjectConfig = async () => {
@@ -141,7 +153,6 @@ const loadProjectConfig = async () => {
     return await configRes.json();
   } catch (error) {
     console.warn('프로젝트 설정 파일이 없습니다. 기본값을 사용합니다.');
-    // 기본값: 가장 최신 연도의 PlanProject를 디폴트로 설정
     return { projects: [], defaultYear: null };
   }
 };
@@ -149,10 +160,8 @@ const loadProjectConfig = async () => {
 // 데이터 로드
 const loadData = async () => {
   try {
-    // 프로젝트 설정 불러오기
     const config = await loadProjectConfig();
 
-    // 프로젝트 파일 동적 로드
     const projectPromises = config.projects && config.projects.length > 0
       ? config.projects.map(year =>
           fetch(`/data/project_${year}.json`)
@@ -163,7 +172,6 @@ const loadData = async () => {
             })
         )
       : [
-          // 기본값: 2025, 2026 프로젝트 로드
           fetch('/data/project_2025.json').then(res => res.json()).catch(() => null),
           fetch('/data/project_2026.json').then(res => res.json()).catch(() => null)
         ];
@@ -182,19 +190,15 @@ const loadData = async () => {
     const socialData = await socialRes.json();
     socialNetworks.value = socialData.platforms;
 
-    // 프로젝트 데이터 정리 (null 제거 및 연도순 정렬)
     projectList.value = projectResults
       .filter(project => project !== null)
-      .sort((a, b) => b.year - a.year); // 최신 연도가 먼저 오도록 정렬
+      .sort((a, b) => b.year - a.year);
 
-    // 기본 프로젝트 설정
     if (projectList.value.length > 0) {
       if (config.defaultYear) {
-        // 설정된 디폴트 연도가 있으면 해당 프로젝트 찾기
         const defaultProject = projectList.value.find(p => p.year === config.defaultYear);
         currentProject.value = defaultProject || projectList.value[0];
       } else {
-        // 디폴트 설정이 없으면 가장 최신 연도 선택
         currentProject.value = projectList.value[0];
       }
     }
@@ -207,10 +211,21 @@ onMounted(() => {
   loadData();
 });
 
-const openManifestoModal = (title, item) => {
-  manifestoModalTitle.value = title;
-  manifestoModalContent.value = item.full_text;
-  isManifestoModalOpen.value = true;
+// 탭 클릭 시 스크롤
+const selectProject = (project) => {
+  currentProject.value = project;
+  if (stickyNavRef.value) {
+    stickyNavRef.value.scrollIntoView({ behavior: 'smooth' });
+  }
+};
+
+// MissionCtaSection에서 emit
+const openManifestoFull = () => {
+  if (manifestoData.value['다짐']) {
+    manifestoModalTitle.value = '다짐';
+    manifestoModalContent.value = manifestoData.value['다짐'].full_text;
+    isManifestoModalOpen.value = true;
+  }
 };
 
 const copyAccount = () => {
@@ -219,8 +234,10 @@ const copyAccount = () => {
 };
 
 const scrollToDonate = () => {
-  if (bankInfoSection.value) {
-    bankInfoSection.value.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  joinType.value = 'supporter';
+  const joinSection = document.querySelector('.join-section');
+  if (joinSection) {
+    joinSection.scrollIntoView({ behavior: 'smooth' });
   }
 };
 </script>
@@ -244,10 +261,14 @@ const scrollToDonate = () => {
   --spacing-xl: 32px;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   padding: 0;
-  background-color: #f5f5f5;
+  background-color: #ffffff;
   color: var(--text-color);
   font-family: "Wanted Sans Variable", "Wanted Sans", -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -256,145 +277,44 @@ body {
   font-weight: 500;
   font-size: 16px;
   letter-spacing: -0.02em;
+  word-break: keep-all;
+  overscroll-behavior: none;
 }
 
-.app-container {
+.app-root {
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: clip;
+}
+
+/* ===== 풀 너비 섹션 래퍼 ===== */
+.section-wrap {
+  width: 100%;
+  padding: 80px 28px 90px;
+}
+
+.section-inner {
   max-width: 640px;
   margin: 0 auto;
-  min-height: 100vh;
-  padding: var(--spacing-xl) var(--spacing-lg);
-  background: var(--bg-color);
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.08);
 }
 
-@media (max-width: 640px) {
-  body {
-    background-color: var(--bg-color);
-    font-size: 15px;
-  }
-  .app-container {
-    box-shadow: none;
-    padding: var(--spacing-md);
-    padding-bottom: 80px; /* 플로팅 버튼 공간 확보 */
-  }
-  .logo {
-    width: 140px;
-    height: 140px;
-  }
-  .main-header {
-    padding: var(--spacing-lg) 0 var(--spacing-xl) 0;
-  }
-  .section {
-    margin-bottom: 48px;
-  }
-  .section-title {
-    font-size: 1.375rem;
-    margin-bottom: var(--spacing-lg);
-  }
-  .divider {
-    margin: 40px 0;
-  }
-  /* 소셜 버튼 모바일 최적화 */
-  .social-buttons {
-    flex-direction: column;
-    gap: var(--spacing-sm);
-  }
-  .social-btn {
-    min-width: 100%;
-    padding: var(--spacing-md);
-    min-height: 48px; /* 터치 타겟 최소 크기 */
-  }
-  .social-icon {
-    width: 22px;
-    height: 22px;
-  }
-  /* 다짐 카드 모바일 */
-  .mf-item {
-    padding: var(--spacing-md);
-  }
-  .mf-item p {
-    font-size: 0.875rem;
-  }
-  .intro-text {
-    font-size: 0.875rem;
-    line-height: 1.8;
-  }
-  /* 탭 버튼 모바일 최적화 */
-  .tab-buttons {
-    gap: var(--spacing-xs);
-  }
-  .tab-buttons button {
-    padding: var(--spacing-sm) var(--spacing-xs);
-    font-size: 0.8125rem;
-    min-height: 44px; /* 터치 타겟 */
-  }
-  /* 함께하기 탭 모바일 */
-  .join-option {
-    padding: var(--spacing-md) var(--spacing-sm);
-    min-height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .join-content {
-    padding: var(--spacing-lg);
-    font-size: 0.875rem;
-  }
-  .join-content h3 {
-    font-size: 1.125rem;
-  }
-  .join-content h4 {
-    font-size: 1rem;
-  }
-  /* 푸터 모바일 */
-  .footer {
-    padding: 32px 0;
-  }
-  .bank-info {
-    padding: var(--spacing-md);
-  }
-  .bank-number {
-    font-size: 1rem;
-  }
-  .copy-btn {
-    min-height: 44px;
-    padding: var(--spacing-sm) var(--spacing-lg);
-  }
+/* 활동과 계획 섹션 */
+.activities-section {
+  background: #ffffff;
 }
 
-/* Headers */
-.main-header {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: var(--spacing-xl) 0 48px 0;
-}
-.logo {
-  width: 180px;
-  height: 180px;
-  object-fit: contain;
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-}
-.main-header h1 {
-  font-size: 2rem;
-  line-height: 1.3;
-  margin: 0 0 var(--spacing-sm) 0;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-}
-.highlight { color: var(--accent-color); }
-.slogan {
-  color: var(--text-color);
-  font-size: 0.875rem;
-  margin: 0;
-  font-weight: 500;
-  letter-spacing: -0.01em;
+.activities-content {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 40px 28px 90px;
 }
 
-/* Section Common */
-.section { margin-bottom: 80px; }
-.join-section { margin-bottom: 24px; }
+/* 함께하기 섹션 */
+.join-section {
+  background: #faf8f6;
+}
+
+/* ===== 섹션 타이틀 ===== */
 .section-title {
   font-size: 1.75rem;
   font-weight: 700;
@@ -405,327 +325,295 @@ body {
   letter-spacing: -0.02em;
   line-height: 1.3;
 }
-.divider {
-  border: 0;
-  height: 1px;
-  background: var(--border-color);
-  margin: 64px 0;
-  opacity: 0.8;
-}
 
-/* Manifesto */
-.intro-text {
-  line-height: 1.7;
-  color: var(--text-color);
-  margin-bottom: var(--spacing-xl);
+/* ===== 계획 소개 문구 ===== */
+.plan-intro {
   font-size: 0.9375rem;
-  letter-spacing: -0.02em;
   font-weight: 500;
-}
-.intro-text strong {
-  color: var(--text-color);
-  font-weight: 700;
-  text-decoration: underline;
-  text-decoration-color: var(--accent-color);
-  text-decoration-thickness: 2px;
-  text-underline-offset: 3px;
+  line-height: 1.9;
+  color: #555;
+  margin: 0 0 var(--spacing-xl) 0;
+  letter-spacing: -0.02em;
+  word-break: keep-all;
 }
 
-.mf-item {
-  background: var(--bg-color);
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-radius: var(--radius-md);
-  margin-bottom: var(--spacing-md);
-  cursor: pointer;
-  position: relative;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid var(--border-color);
-}
-.mf-item:hover {
-  transform: translateY(-2px);
-  border-color: var(--accent-color);
-}
-.mf-item:active {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
-}
-.mf-label {
-  display: block;
-  font-size: 0.6875rem;
-  color: var(--accent-color);
-  font-weight: 700;
-  margin-bottom: var(--spacing-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-.mf-item p {
-  margin: 0;
-  font-size: 0.9375rem;
-  color: var(--text-color);
-  padding-right: 28px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
-  line-height: 1.5;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-}
-.mf-arrow {
-  position: absolute;
-  right: var(--spacing-lg);
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-color);
-  font-size: 1.2rem;
-  transition: all 0.25s ease;
-  font-weight: 300;
-}
-.mf-item:hover .mf-arrow {
-  color: var(--accent-color);
-  transform: translateY(-50%) translateX(2px);
+.plan-intro.muted {
+  color: #000;
+  font-size: 1rem;
+  font-weight: 600;
 }
 
-/* Project Tabs */
-.tab-buttons {
+.plan-intro.muted mark {
+  background: linear-gradient(to top, rgba(139, 37, 255, 0.2) 0%, rgba(139, 37, 255, 0.2) 40%, transparent 40%);
+  color: inherit;
+  padding: 0 2px;
+}
+
+/* ===== 스티키 탭 네비게이션 ===== */
+.sticky-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.sticky-nav-inner {
   display: flex;
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-xl);
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0;
 }
-.tab-buttons button {
+
+.sticky-nav-inner button {
   flex: 1;
-  padding: var(--spacing-md);
+  padding: 16px 12px;
   background: transparent;
-  border: 1.5px solid var(--border-color);
-  color: var(--text-color);
-  border-radius: 30px;
-  font-size: 0.875rem;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: #888;
+  font-size: 0.9375rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.25s ease;
   letter-spacing: -0.01em;
+  font-family: inherit;
 }
-.tab-buttons button:hover {
-  border-color: var(--accent-color);
+
+.sticky-nav-inner button:hover {
   color: var(--accent-color);
 }
-.tab-buttons button.active {
+
+.sticky-nav-inner button.active {
+  color: var(--text-color);
+  border-bottom-color: var(--accent-color);
+  font-weight: 700;
+}
+
+/* ===== 함께하기 ===== */
+.join-tag {
+  display: inline-block;
+  background: var(--accent-color);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 6px 16px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+  letter-spacing: -0.01em;
+}
+.join-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1.5;
+  letter-spacing: -0.03em;
+  margin: 0 0 28px 0;
+  color: var(--text-color);
+}
+.join-tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+.join-tab-btn {
+  padding: 10px 24px;
+  border-radius: 24px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: 2px solid var(--accent-color);
+  color: var(--accent-color);
+  background: transparent;
+  font-family: inherit;
+}
+.join-tab-btn.active {
   background: var(--accent-color);
   color: #fff;
   border-color: var(--accent-color);
-  font-weight: 700;
 }
-
-/* Social Network Section */
-.social-section {
-  margin-bottom: var(--spacing-xl);
-}
-
-.social-buttons {
-  display: flex;
-  gap: var(--spacing-md);
-  flex-wrap: wrap;
-}
-.social-btn {
-  flex: 1;
-  min-width: 140px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md) var(--spacing-lg);
-  background: var(--bg-color);
-  border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-md);
-  color: var(--text-color);
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 0.9375rem;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  letter-spacing: -0.01em;
-}
-.social-btn:hover {
-  border-color: var(--platform-color);
-  color: var(--platform-color);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-.social-btn:active {
-  transform: translateY(-1px);
-}
-.social-icon {
-  width: 20px;
-  height: 20px;
-  transition: all 0.25s ease;
-}
-.social-btn:hover .social-icon {
-  color: var(--platform-color);
-}
-
-/* Join Section */
-.join-tabs {
-  display: flex;
-  border-bottom: 2px solid var(--border-color);
-  margin-bottom: var(--spacing-lg);
-}
-.join-option {
-  flex: 1;
-  text-align: center;
-  padding: var(--spacing-md);
-  cursor: pointer;
-  color: var(--text-color);
-  position: relative;
-  transition: all 0.25s ease;
-  font-weight: 400;
-}
-.join-option:hover {
-  color: var(--accent-color);
-}
-.join-option.active {
-  color: var(--text-color);
-  font-weight: 700;
-}
-.join-option.active::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 100%;
-  height: 3px;
-  background: var(--accent-color);
-  border-radius: 2px 2px 0 0;
+.join-tab-btn:hover:not(.active) {
+  background: rgba(139, 37, 255, 0.08);
 }
 .join-content {
-  background: var(--bg-color);
-  padding: var(--spacing-xl);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-color);
-  line-height: 1.7;
+  line-height: 1.8;
   font-weight: 500;
   font-size: 0.9375rem;
   letter-spacing: -0.02em;
+  min-height: 200px;
 }
 .join-content h3 {
   font-size: 1.25rem;
-  font-weight: 700;
+  font-weight: 800;
   margin: 0 0 var(--spacing-md) 0;
   letter-spacing: -0.02em;
   color: var(--text-color);
 }
 .join-content h4 {
-  font-size: 1.0625rem;
+  font-size: 1rem;
   font-weight: 700;
-  margin: var(--spacing-lg) 0 var(--spacing-sm) 0;
+  margin: 28px 0 var(--spacing-sm) 0;
   letter-spacing: -0.02em;
   color: var(--text-color);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
 }
 .join-content p {
   margin: var(--spacing-sm) 0;
-  color: var(--text-color);
+  color: #444;
 }
 .join-content ul, .join-content ol {
   margin: var(--spacing-sm) 0;
-  padding-left: 24px;
-  color: var(--text-color);
+  padding-left: 20px;
+  color: #555;
 }
 .join-content li {
   margin-bottom: var(--spacing-xs);
-}
-.join-content strong {
-  font-weight: 700;
-  color: var(--text-color);
+  line-height: 1.7;
 }
 .join-content em {
-  font-style: italic;
-  color: var(--text-color);
-  opacity: 0.8;
+  font-style: normal;
+  font-size: 0.85rem;
+  color: #888;
 }
 .action-btn {
   display: inline;
-  margin-top: var(--spacing-lg);
-  color: var(--text-color);
-  text-decoration: none;
-  font-weight: 700;
-  font-size: 1rem;
-  letter-spacing: -0.01em;
-  position: relative;
-  background: linear-gradient(to top, rgba(139, 37, 255, 0.3) 0%, rgba(139, 37, 255, 0.3) 40%, transparent 40%);
-  transition: all 0.25s ease;
+  margin-top: 28px;
   padding: 2px 4px;
+  background: linear-gradient(to top, rgba(139, 37, 255, 0.25) 0%, rgba(139, 37, 255, 0.25) 40%, transparent 40%);
+  color: var(--text-color);
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  transition: all 0.25s ease;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
 }
 .action-btn:hover {
-  background: linear-gradient(to top, rgba(139, 37, 255, 0.5) 0%, rgba(139, 37, 255, 0.5) 50%, transparent 50%);
+  background: linear-gradient(to top, rgba(139, 37, 255, 0.45) 0%, rgba(139, 37, 255, 0.45) 50%, transparent 50%);
   color: var(--text-color);
 }
 .action-btn:active {
   background: linear-gradient(to top, var(--accent-color) 0%, var(--accent-color) 45%, transparent 45%);
+  color: #fff;
 }
-.fade-in {
-  animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Footer */
-.footer {
-  text-align: center;
-  padding: 48px 0;
-  color: var(--text-color);
-  font-size: 0.9rem;
-  font-weight: 400;
-}
-.bank-info {
-  background: var(--bg-color);
+/* 후원 카드 */
+.donate-card {
+  margin-top: 28px;
+  background: #f8f6ff;
+  border: 1px solid rgba(139, 37, 255, 0.15);
+  border-radius: var(--radius-lg);
   padding: var(--spacing-lg);
-  border-radius: var(--radius-md);
-  display: inline-block;
-  margin-bottom: var(--spacing-lg);
-  border: 1px solid var(--border-color);
-  width: 100%;
-  box-sizing: border-box;
+  text-align: center;
 }
-.bank-label {
-  color: var(--accent-color);
-  font-size: 0.6875rem;
+.donate-label {
+  font-size: 0.75rem;
   font-weight: 700;
-  margin-bottom: var(--spacing-xs);
+  color: var(--accent-color);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  margin: 0 0 var(--spacing-xs) 0;
 }
-.bank-number {
-  font-size: 1.125rem;
+.donate-account {
+  font-size: 1.25rem;
+  font-weight: 800;
   color: var(--text-color);
-  font-weight: 700;
-  margin: var(--spacing-sm) 0;
+  margin: var(--spacing-xs) 0;
   letter-spacing: -0.02em;
 }
-.depositor {
-  display: block;
+.donate-depositor {
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--text-color);
-  margin-top: var(--spacing-xs);
-  letter-spacing: -0.01em;
+  color: #666;
+  margin: 4px 0 0 0;
 }
-.copy-btn {
-  background: transparent;
-  border: 1.5px solid var(--border-color);
-  color: var(--text-color);
-  padding: var(--spacing-xs) var(--spacing-md);
+.donate-copy-btn {
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-lg);
+  background: var(--accent-color);
+  color: #fff;
+  border: none;
   border-radius: var(--radius-sm);
   font-size: 0.8125rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.25s ease;
-  margin-top: var(--spacing-sm);
+  font-family: inherit;
   letter-spacing: -0.01em;
 }
-.copy-btn:hover {
-  border-color: var(--accent-color);
-  color: var(--accent-color);
+.donate-copy-btn:hover {
+  opacity: 0.85;
 }
-.copy-btn:active {
+.donate-copy-btn:active {
   transform: scale(0.98);
 }
+.donate-note {
+  margin: var(--spacing-sm) 0 0 0;
+}
+.donate-note em {
+  font-size: 0.8rem;
+  color: #999;
+}
+/* 탭 전환 애니메이션 */
+.tab-enter-active,
+.tab-leave-active {
+  transition: all 0.25s ease;
+}
+.tab-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.tab-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+/* ===== 다크 푸터 ===== */
+.site-footer {
+  background: #1a1a1a;
+  padding: 60px 28px 48px;
+  text-align: center;
+  color: #ffffff;
+}
+
+.footer-inner {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.footer-social {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin: 32px 0;
+}
+.footer-social-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.25s ease;
+  letter-spacing: -0.01em;
+}
+.footer-social-link:hover {
+  background: rgba(139, 37, 255, 0.3);
+  color: #ffffff;
+}
+.footer-social-link .social-icon {
+  width: 18px;
+  height: 18px;
+}
+
 .footer-info {
   margin-top: var(--spacing-lg);
   text-align: center;
@@ -733,45 +621,19 @@ body {
 .footer-name {
   font-size: 1rem;
   font-weight: 700;
-  color: var(--text-color);
+  color: #ffffff;
   margin: 0 0 var(--spacing-xs) 0;
   letter-spacing: -0.02em;
 }
 .footer-contact {
   font-size: 0.875rem;
-  color: var(--text-color);
+  color: rgba(255, 255, 255, 0.6);
   margin: 0;
   font-weight: 500;
   letter-spacing: -0.01em;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Smooth Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-track {
-  background: var(--bg-color);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-color);
-}
-
-/* 후원 플로팅 버튼 */
+/* ===== 후원 플로팅 버튼 ===== */
 .donate-floating-btn {
   position: fixed;
   bottom: 24px;
@@ -790,17 +652,73 @@ body {
   align-items: center;
   justify-content: center;
 }
-
 .donate-floating-btn:hover {
   transform: scale(1.1);
   box-shadow: 0 6px 20px rgba(139, 37, 255, 0.4);
 }
-
 .donate-floating-btn:active {
   transform: scale(0.95);
 }
 
+/* ===== 애니메이션 ===== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== 스크롤바 ===== */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-color);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-color);
+}
+
+/* ===== 모바일 반응형 ===== */
 @media (max-width: 640px) {
+  body {
+    font-size: 15px;
+  }
+  .section-wrap {
+    padding: 60px 20px 70px;
+  }
+  .section-title {
+    font-size: 1.375rem;
+    margin-bottom: var(--spacing-lg);
+  }
+  .sticky-nav-inner button {
+    padding: 14px 8px;
+    font-size: 0.875rem;
+  }
+  .activities-content {
+    padding: 32px 20px 70px;
+  }
+  .join-title {
+    font-size: 1.375rem;
+  }
+  .join-tab-btn {
+    padding: 10px 20px;
+    font-size: 0.875rem;
+  }
+  .join-content {
+    font-size: 0.875rem;
+  }
+  .join-content h3 {
+    font-size: 1.125rem;
+  }
+  .join-content h4 {
+    font-size: 0.9375rem;
+  }
+  .site-footer {
+    padding: 48px 20px 40px;
+  }
   .donate-floating-btn {
     bottom: 16px;
     right: 16px;
@@ -810,61 +728,42 @@ body {
   }
 }
 
-/* 작은 모바일 화면 추가 최적화 (360px 이하) */
+/* 작은 모바일 (360px 이하) */
 @media (max-width: 360px) {
-  .app-container {
-    padding: var(--spacing-sm);
-    padding-bottom: 80px;
-  }
-  .logo {
-    width: 120px;
-    height: 120px;
-  }
   .section-title {
     font-size: 1.25rem;
   }
-  .tab-buttons {
-    flex-wrap: wrap;
+  .sticky-nav-inner button {
+    font-size: 0.8125rem;
   }
-  .tab-buttons button {
-    flex: 1 1 45%;
-    font-size: 0.75rem;
-  }
-  .mf-label {
-    font-size: 0.625rem;
-  }
-  .bank-number {
-    font-size: 0.9375rem;
-  }
-  .join-content {
-    padding: var(--spacing-md);
+  .join-tab-btn {
+    padding: 8px 16px;
+    font-size: 0.8125rem;
   }
 }
 
 /* 터치 디바이스 최적화 */
 @media (hover: none) and (pointer: coarse) {
-  .mf-item:hover,
-  .social-btn:hover,
-  .tab-buttons button:hover,
-  .join-option:hover,
-  .copy-btn:hover {
+  .sticky-nav-inner button:hover,
+  .join-tab-btn:hover:not(.active) {
     transform: none;
+    background: transparent;
   }
-  .mf-item:active {
-    transform: scale(0.98);
-    background: rgba(139, 37, 255, 0.03);
-  }
-  .social-btn:active {
-    transform: scale(0.98);
-    background: rgba(139, 37, 255, 0.05);
-  }
-  .tab-buttons button:active,
-  .join-option:active {
+  .sticky-nav-inner button:active,
+  .join-tab-btn:active {
     transform: scale(0.98);
   }
-  .copy-btn:active {
-    transform: scale(0.95);
-    background: rgba(139, 37, 255, 0.1);
+  .action-btn:hover {
+    background: linear-gradient(to top, rgba(139, 37, 255, 0.25) 0%, rgba(139, 37, 255, 0.25) 40%, transparent 40%);
+  }
+  .action-btn:active {
+    background: linear-gradient(to top, rgba(139, 37, 255, 0.45) 0%, rgba(139, 37, 255, 0.45) 50%, transparent 50%);
+  }
+  .donate-copy-btn:hover {
+    opacity: 1;
+  }
+  .donate-copy-btn:active {
+    transform: scale(0.98);
   }
 }
 </style>

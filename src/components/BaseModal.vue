@@ -113,7 +113,7 @@ onUnmounted(() => {
   .modal-body {
     padding: 20px;
     font-size: 0.9375rem;
-    padding-bottom: 40px; /* 하단 여백 추가 */
+    padding-bottom: 40px;
   }
   .modal-body :deep(ul),
   .modal-body :deep(ol) {
@@ -135,7 +135,7 @@ onUnmounted(() => {
   }
   .modal-body {
     padding: 16px;
-    font-size: 0.875rem;
+    font-size: 0.9375rem;
   }
 }
 
@@ -210,10 +210,10 @@ onUnmounted(() => {
 }
 .modal-body {
   padding: 24px;
-  line-height: 1.5;
+  line-height: 1.7;
   white-space: pre-line;
   color: var(--text-color, #000);
-  font-size: 0.9375rem;
+  font-size: 1rem;
   letter-spacing: -0.02em;
   font-weight: 500;
 }

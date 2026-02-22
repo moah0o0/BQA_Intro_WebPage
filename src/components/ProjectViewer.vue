@@ -1,205 +1,162 @@
 <template>
   <div class="project-viewer">
-    <!-- 2025년 결과 (DoneProject) -->
+    <!-- 2025년 결과 (DoneProject) - 인스타 피드 -->
     <div v-if="data.type === 'DoneProject'" class="view-done">
-      <div class="items-list">
-        <div v-for="(item, idx) in data.items" :key="idx" class="card"
-             :class="{ 'clickable': item.is_modal }"
-             @click="item.is_modal ? openModalWithContent(item) : null">
-          <div v-if="item.photos && item.photos.length" class="card-img-wrapper"
-               :class="{ 'square': imageAspectRatios[idx] === 'square' }"
-               @click.stop>
-            <img :src="item.photos[currentPhotoIndex[idx] || 0]" alt="활동 사진"
-                 @load="checkImageRatio($event, idx)" />
-            <button v-if="item.photos.length > 1" class="photo-nav prev" @click="prevPhoto(idx, item.photos.length)">&lt;</button>
-            <button v-if="item.photos.length > 1" class="photo-nav next" @click="nextPhoto(idx, item.photos.length)">&gt;</button>
-            <div v-if="item.photos.length > 1" class="photo-indicators">
-              <span v-for="(photo, pIdx) in item.photos" :key="pIdx"
-                    :class="{ active: (currentPhotoIndex[idx] || 0) === pIdx }"
-                    @click="setPhoto(idx, pIdx)"></span>
+      <div v-if="loadingPosts" class="loading-indicator">불러오는 중...</div>
+      <div v-else class="feed">
+        <article
+          v-for="post in posts"
+          :key="post.id"
+          class="feed-card"
+          @click="openPost(post)"
+        >
+          <div class="feed-header">
+            <div class="feed-avatar">{{ post.order }}</div>
+            <div class="feed-header-text">
+              <span class="feed-username">{{ post.subtitle }}</span>
+              <span class="feed-label">부산퀴어행동 · 2025</span>
             </div>
           </div>
-          <div class="card-body">
-            <div class="card-header-row">
-              <div class="card-title-wrapper">
-                <h4>{{ item.subtitle }}</h4>
-                <span v-if="item.date" class="card-date">{{ item.date }}</span>
-              </div>
-              <span v-if="item.is_modal" class="more-icon">+</span>
-            </div>
-            <div v-if="!item.is_modal" class="card-content">
-              <p v-html="item.description"></p>
-              <ul v-if="item.details && item.details.length" class="details-list">
-                <li v-for="(detail, dIdx) in item.details" :key="dIdx" v-html="detail"></li>
-              </ul>
-            </div>
-            <div v-else class="card-summary">
-              <p v-html="item.description"></p>
-              <small class="click-hint">자세히 보기</small>
-            </div>
+          <div v-if="post.photos && post.photos.length" class="feed-cover">
+            <img :src="post.photos[0]" :alt="post.subtitle" />
+            <span v-if="post.photos.length > 1" class="feed-photo-count">{{ post.photos.length }}장</span>
           </div>
-        </div>
+          <div class="feed-caption">
+            <p class="feed-desc"><strong>{{ post.subtitle }}</strong> {{ post.description }}</p>
+            <span class="feed-more">더보기</span>
+          </div>
+        </article>
       </div>
     </div>
 
-    <!-- 2026년 계획 (PlanProject) - 새 구조 -->
+    <!-- 2026년 계획 (PlanProject) - 카드 UI -->
     <div v-if="data.type === 'PlanProject'" class="view-plan">
-
-      <!-- 배경 섹션 -->
-      <div v-if="data.background && data.background.length" class="background-section">
-        <h3 class="section-title">배경</h3>
-        <ul class="background-list">
-          <li v-for="(item, idx) in data.background" :key="idx">{{ item }}</li>
-        </ul>
-      </div>
-
-      <!-- 정기모임 개요 섹션 -->
-      <div v-if="data.overview" class="overview-section">
-        <h3 class="section-title">정기모임</h3>
-        <div class="overview-card">
-          <div class="overview-item">
-            <span class="overview-label">시기</span>
-            <span class="overview-value">{{ data.overview.period }}</span>
-          </div>
-          <div class="overview-item">
-            <span class="overview-label">일시</span>
-            <span class="overview-value">{{ data.overview.schedule }}</span>
-          </div>
-          <div class="overview-item">
-            <span class="overview-label">대상</span>
-            <span class="overview-value">{{ data.overview.target }}</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 목적 및 목표 섹션 -->
-      <div v-if="data.goals && data.goals.length" class="goals-section">
-        <h3 class="section-title">정기모임 목적 및 목표</h3>
-        <ul class="goals-list">
-          <li v-for="(goal, idx) in data.goals" :key="idx">{{ goal }}</li>
-        </ul>
-      </div>
-
-      <!-- 정기모임 내용 -->
-      <div v-if="data.programs && data.programs.length" class="programs-section">
-        <h3 class="section-title">정기모임 내용</h3>
-        <div class="programs-list">
+      <div v-if="loadingCards" class="loading-indicator">불러오는 중...</div>
+      <template v-if="data.cards && data.cards.length">
+        <!-- featured 카드 -->
+        <div class="plan-cards">
           <div
-            v-for="(program, idx) in data.programs"
-            :key="program.id"
-            class="program-card"
-            :class="{ 'clickable': program.is_modal }"
-            @click="program.is_modal ? openProgramModal(program) : null"
+            v-for="card in data.cards.filter(c => c.featured)"
+            :key="card.id"
+            class="plan-card featured"
+            @click="openCardModal(card)"
           >
-            <div class="program-header">
-              <span class="program-number">{{ idx + 1 }}</span>
-              <div class="program-info">
-                <h4>{{ program.title }}</h4>
-                <span class="program-schedule">{{ program.schedule }}</span>
-              </div>
-              <span v-if="program.is_modal" class="more-icon">+</span>
-            </div>
-            <p class="program-summary">{{ program.summary }}</p>
-            <template v-if="!program.is_modal && program.details && program.details.length">
-              <ul class="program-details">
-                <li v-for="(detail, dIdx) in program.details" :key="dIdx" v-html="detail"></li>
-              </ul>
-            </template>
-            <small v-if="program.is_modal" class="click-hint">자세히 보기</small>
+            <span class="featured-badge">주요활동</span>
+            <div class="plan-card-icon">{{ card.icon }}</div>
+            <h3 class="plan-card-title">{{ card.title }}</h3>
+            <p v-if="card.subtitle" class="plan-card-subtitle">{{ card.subtitle }}</p>
+            <p class="plan-card-body">{{ card.body }}</p>
+            <span class="plan-card-cta">{{ card.cta }}</span>
           </div>
         </div>
-      </div>
-
-      <!-- 정기모임 연계활동 -->
-      <div v-if="data.linked_activities && data.linked_activities.length" class="activities-section">
-        <h3 class="section-title">정기모임 연계활동</h3>
-        <div class="activities-list">
-          <div v-for="activity in data.linked_activities" :key="activity.id" class="activity-item">
-            <span class="activity-date">{{ activity.date }}</span>
-            <div class="activity-content">
-              <h4>{{ activity.title }}</h4>
-              <p v-if="activity.description">{{ activity.description }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 연대사업 -->
-      <div v-if="data.solidarity_activities && data.solidarity_activities.length" class="solidarity-section">
-        <h3 class="section-title">연대사업</h3>
-        <div class="solidarity-list">
-          <div v-for="item in data.solidarity_activities" :key="item.id" class="solidarity-card">
-            <span class="solidarity-date">{{ item.date }}</span>
-            <h4>{{ item.title }}</h4>
-            <p>{{ item.description }}</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- MT / 캠프 -->
-      <div v-if="data.camp" class="camp-section">
-        <h3 class="section-title">{{ data.camp.title }}</h3>
-        <div class="camp-card">
-          <div class="camp-header">
-            <span class="camp-schedule">{{ data.camp.schedule }}</span>
-          </div>
-          <p class="camp-desc">{{ data.camp.description }}</p>
-          <ul v-if="data.camp.details && data.camp.details.length" class="camp-details">
-            <li v-for="(detail, idx) in data.camp.details" :key="idx">{{ detail }}</li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- 열린 회의 / 교육 -->
-      <div v-if="data.open_meetings && data.open_meetings.length" class="open-meetings-section">
-        <h3 class="section-title">열린 회의 및 교육</h3>
-        <div class="open-meetings-list">
+        <p class="featured-note">
+          세상을 바꾸기 위한 <mark>사회운동에 재미있는 방식으로 함께</mark>하고,
+          우리 스스로의 고민과 기획을 담아 행동으로 옮겨봅시다.
+          이를 통해 <mark>세상을 바꾸는 우리 퀴어들의 힘</mark>을 키워봐요!
+        </p>
+        <!-- 나머지 카드 -->
+        <div class="plan-cards">
           <div
-            v-for="meeting in data.open_meetings"
-            :key="meeting.id"
-            class="open-meeting-card"
-            :class="{ 'clickable': meeting.is_modal }"
-            @click="meeting.is_modal ? openMeetingModal(meeting) : null"
+            v-for="card in data.cards.filter(c => !c.featured)"
+            :key="card.id"
+            class="plan-card"
+            :class="{ 'half': card.layout === 'half' }"
+            @click="openCardModal(card)"
           >
-            <div class="open-meeting-header">
-              <div class="open-meeting-title-wrapper">
-                <h4>{{ meeting.title }}</h4>
-                <span class="open-meeting-schedule">{{ meeting.schedule }}</span>
-              </div>
-              <span v-if="meeting.is_modal" class="more-icon">+</span>
-            </div>
-            <p class="open-meeting-desc">{{ meeting.description }}</p>
-            <template v-if="!meeting.is_modal && meeting.details && meeting.details.length">
-              <ul class="open-meeting-details">
-                <li v-for="(detail, idx) in meeting.details" :key="idx">{{ detail }}</li>
-              </ul>
-            </template>
-            <small v-if="meeting.is_modal" class="click-hint" style="padding-left: 0;">자세히 보기</small>
+            <div class="plan-card-icon">{{ card.icon }}</div>
+            <h3 class="plan-card-title">{{ card.title }}</h3>
+            <p v-if="card.subtitle" class="plan-card-subtitle">{{ card.subtitle }}</p>
+            <p class="plan-card-body">{{ card.body }}</p>
+            <span class="plan-card-cta">{{ card.cta }}</span>
           </div>
         </div>
-      </div>
-
+      </template>
       <!-- 회원이 여는 소모임 -->
-      <div v-if="data.sub_clubs && data.sub_clubs.length" class="clubs-section">
-        <h3 class="section-title">회원이 여는 소모임</h3>
-        <div class="clubs-list">
-          <div v-for="club in data.sub_clubs" :key="club.id" class="club-card">
-            <h4>{{ club.name }}</h4>
+      <div v-if="data.clubs && data.clubs.length" class="clubs-section">
+        <h4 class="extras-heading">회원이 여는 소모임</h4>
+        <div
+          v-for="club in data.clubs"
+          :key="club.id"
+          class="extra-item"
+          :class="{ open: openExtras[club.id] }"
+        >
+          <button class="extra-title" @click.stop="toggleExtra(club.id)">
+            <span><strong>{{ club.name }}</strong> <span class="club-label">{{ club.label }}</span></span>
+            <span class="extra-arrow">&#8250;</span>
+          </button>
+          <div v-if="openExtras[club.id]" class="extra-body">
             <p>{{ club.description }}</p>
           </div>
         </div>
       </div>
 
+      <!-- 부가 활동 아코디언 -->
+      <div v-if="data.extras && data.extras.length" class="extras-section">
+        <h4 class="extras-heading">함께하는 활동</h4>
+        <div
+          v-for="extra in data.extras"
+          :key="extra.id"
+          class="extra-item"
+          :class="{ open: openExtras[extra.id] }"
+        >
+          <button class="extra-title" @click.stop="toggleExtra(extra.id)">
+            <span>{{ extra.title }}</span>
+            <span class="extra-arrow">&#8250;</span>
+          </button>
+          <div v-if="openExtras[extra.id]" class="extra-body">
+            <p>{{ extra.description }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 임원진 다짐 -->
+      <div v-if="data.leaders && data.leaders.length" class="leaders-section">
+        <h4 class="extras-heading">2026 부산퀴어행동을 이끌 사람들</h4>
+        <div class="leaders-grid">
+          <div v-for="leader in data.leaders" :key="leader.id" class="leader-card">
+            <img :src="leader.photo" :alt="leader.name" class="leader-photo" />
+            <div class="leader-info">
+              <span class="leader-name">{{ leader.name }}</span>
+              <span class="leader-role">{{ leader.role }}</span>
+            </div>
+            <p class="leader-message">{{ leader.message }}</p>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- 모달 -->
-    <BaseModal :is-open="showModal" :title="modalContent.title" @close="showModal = false">
-      <div v-if="modalContent.details">
-        <p v-for="(p, i) in modalContent.details" :key="i" style="margin-bottom:10px;" v-html="p"></p>
+    <!-- PlanProject 카드 모달 -->
+    <BaseModal :is-open="showCardModal" :title="cardModalData.title" @close="showCardModal = false">
+      <div v-if="cardModalData.htmlContent" class="post-body" v-html="cardModalData.htmlContent"></div>
+    </BaseModal>
+
+    <!-- DoneProject 게시글 모달 -->
+    <BaseModal :is-open="showPostModal" :title="postModalData.subtitle" @close="showPostModal = false">
+      <p class="post-description">{{ postModalData.description }}</p>
+
+      <div v-if="postModalData.photos && postModalData.photos.length" class="post-gallery">
+        <div class="post-gallery-main">
+          <img :src="postModalData.photos[currentPostPhoto]" alt="활동 사진" />
+          <button v-if="postModalData.photos.length > 1" class="photo-nav prev" @click="prevPostPhoto">&lt;</button>
+          <button v-if="postModalData.photos.length > 1" class="photo-nav next" @click="nextPostPhoto">&gt;</button>
+        </div>
+        <div v-if="postModalData.photos.length > 1" class="post-gallery-thumbs">
+          <img
+            v-for="(photo, pIdx) in postModalData.photos"
+            :key="pIdx"
+            :src="photo"
+            :class="{ active: currentPostPhoto === pIdx }"
+            @click="currentPostPhoto = pIdx"
+            alt="썸네일"
+          />
+        </div>
       </div>
-      <div v-if="modalContent.videos && modalContent.videos.length" class="videos-section">
+
+      <div v-if="postModalData.htmlContent" class="post-body" v-html="postModalData.htmlContent"></div>
+
+      <div v-if="postModalData.videos && postModalData.videos.length" class="videos-section">
         <h4 class="videos-title">영상</h4>
-        <div v-for="(video, vIdx) in modalContent.videos" :key="vIdx" class="video-wrapper">
+        <div v-for="(video, vIdx) in postModalData.videos" :key="vIdx" class="video-wrapper">
           <iframe
             :src="video"
             frameborder="0"
@@ -213,77 +170,161 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
+import { marked } from 'marked';
 import BaseModal from './BaseModal.vue';
 
 const props = defineProps({
   data: Object
 });
 
-const showModal = ref(false);
-const modalContent = ref({ title: '', details: [], videos: [] });
-const currentPhotoIndex = ref({});
-const imageAspectRatios = ref({});
+// PlanProject 카드 모달
+const showCardModal = ref(false);
+const cardModalData = ref({ title: '', htmlContent: '' });
+const cardMarkdownCache = ref({});
+const loadingCards = ref(false);
 
-// 프로그램 모달 열기
-const openProgramModal = (program) => {
-  if (!program?.is_modal) return;
-
-  modalContent.value = {
-    title: program.title,
-    details: program.details,
-    videos: program.videos || []
-  };
-  showModal.value = true;
+// PlanProject 부가활동 아코디언
+const openExtras = ref({});
+const toggleExtra = (id) => {
+  openExtras.value[id] = !openExtras.value[id];
 };
 
-// 열린 회의/교육 모달 열기
-const openMeetingModal = (meeting) => {
-  if (!meeting?.is_modal) return;
+// DoneProject 게시판
+const posts = ref([]);
+const loadingPosts = ref(false);
 
-  modalContent.value = {
-    title: meeting.title,
-    details: meeting.details,
-    videos: []
-  };
-  showModal.value = true;
+// DoneProject 게시글 모달
+const showPostModal = ref(false);
+const postModalData = ref({ subtitle: '', description: '', photos: [], videos: [], htmlContent: '' });
+const currentPostPhoto = ref(0);
+
+// frontmatter 파싱
+const parseFrontmatter = (raw) => {
+  const match = raw.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
+  if (!match) return { meta: {}, content: raw };
+
+  const frontmatter = match[1];
+  const content = match[2];
+  const meta = {};
+
+  let currentKey = null;
+  let currentList = null;
+
+  for (const line of frontmatter.split('\n')) {
+    if (line.match(/^\s+-\s+/)) {
+      const val = line.replace(/^\s+-\s+/, '').trim();
+      if (currentList && currentKey) {
+        currentList.push(val);
+      }
+      continue;
+    }
+
+    const kvMatch = line.match(/^(\w+):\s*(.*)$/);
+    if (kvMatch) {
+      const key = kvMatch[1];
+      const value = kvMatch[2].trim();
+
+      if (value === '') {
+        currentKey = key;
+        currentList = [];
+        meta[key] = currentList;
+      } else {
+        meta[key] = value.replace(/^['"]|['"]$/g, '');
+        currentKey = null;
+        currentList = null;
+      }
+    }
+  }
+
+  return { meta, content };
 };
 
-// 기존 DoneProject용 모달
-const openModalWithContent = (item) => {
-  if (!item?.is_modal) return;
+// 마크다운 파일들 로드
+const loadPosts = async () => {
+  if (props.data.type !== 'DoneProject' || !props.data.posts) return;
 
-  modalContent.value = {
-    title: item.subtitle,
-    details: item.details,
-    videos: item.videos || []
-  };
-  showModal.value = true;
-};
+  loadingPosts.value = true;
+  const postsDir = props.data.postsDir || '/data/posts/' + props.data.year + '/';
 
-const nextPhoto = (itemIdx, total) => {
-  const current = currentPhotoIndex.value[itemIdx] || 0;
-  currentPhotoIndex.value[itemIdx] = (current + 1) % total;
-};
-
-const prevPhoto = (itemIdx, total) => {
-  const current = currentPhotoIndex.value[itemIdx] || 0;
-  currentPhotoIndex.value[itemIdx] = current === 0 ? total - 1 : current - 1;
-};
-
-const setPhoto = (itemIdx, photoIdx) => {
-  currentPhotoIndex.value[itemIdx] = photoIdx;
-};
-
-const checkImageRatio = (event, idx) => {
-  const img = event.target;
-  const ratio = img.naturalWidth / img.naturalHeight;
-  if (ratio >= 0.95 && ratio <= 1.05) {
-    imageAspectRatios.value[idx] = 'square';
-  } else {
-    imageAspectRatios.value[idx] = 'auto';
+  try {
+    const results = await Promise.all(
+      props.data.posts.map(async (filename) => {
+        const res = await fetch(postsDir + filename);
+        const raw = await res.text();
+        const { meta, content } = parseFrontmatter(raw);
+        return {
+          ...meta,
+          order: parseInt(meta.order) || 0,
+          photos: meta.photos || [],
+          videos: meta.videos || [],
+          markdownContent: content.trim()
+        };
+      })
+    );
+    posts.value = results.sort((a, b) => a.order - b.order);
+  } catch (error) {
+    console.error('게시글 로드 실패:', error);
+  } finally {
+    loadingPosts.value = false;
   }
 };
+
+// 게시글 열기
+const openPost = (post) => {
+  currentPostPhoto.value = 0;
+  postModalData.value = {
+    subtitle: post.subtitle || '',
+    description: post.description || '',
+    photos: post.photos || [],
+    videos: post.videos || [],
+    htmlContent: post.markdownContent ? marked(post.markdownContent) : ''
+  };
+  showPostModal.value = true;
+};
+
+// 사진 네비게이션
+const nextPostPhoto = () => {
+  const total = postModalData.value.photos.length;
+  currentPostPhoto.value = (currentPostPhoto.value + 1) % total;
+};
+
+const prevPostPhoto = () => {
+  const total = postModalData.value.photos.length;
+  currentPostPhoto.value = currentPostPhoto.value === 0 ? total - 1 : currentPostPhoto.value - 1;
+};
+
+// PlanProject 카드 모달
+const openCardModal = async (card) => {
+  if (!card.detailFile) return;
+
+  cardModalData.value = { title: card.title, htmlContent: '' };
+  showCardModal.value = true;
+
+  // 캐시에 있으면 바로 사용
+  if (cardMarkdownCache.value[card.id]) {
+    cardModalData.value.htmlContent = cardMarkdownCache.value[card.id];
+    return;
+  }
+
+  try {
+    const postsDir = props.data.postsDir || '/data/posts/' + props.data.year + '/';
+    const res = await fetch(postsDir + card.detailFile);
+    const raw = await res.text();
+    const html = marked(raw);
+    cardMarkdownCache.value[card.id] = html;
+    cardModalData.value.htmlContent = html;
+  } catch (error) {
+    console.error('카드 상세 로드 실패:', error);
+    cardModalData.value.htmlContent = '<p>내용을 불러올 수 없습니다.</p>';
+  }
+};
+
+watch(() => props.data, () => {
+  if (props.data.type === 'DoneProject') {
+    loadPosts();
+  }
+}, { immediate: true });
 </script>
 
 <style scoped>
@@ -291,583 +332,568 @@ const checkImageRatio = (event, idx) => {
   animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ===== 2026 계획 스타일 ===== */
-.view-plan {
+/* ===== 인스타 피드 스타일 ===== */
+.feed {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xl, 32px);
+  gap: 24px;
 }
 
-/* 배경 섹션 */
-.background-section {
-  margin-bottom: var(--spacing-md, 16px);
-}
-
-.background-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm, 12px);
-}
-
-.background-list li {
-  position: relative;
-  padding-left: 24px;
-  font-size: 0.9375rem;
-  color: var(--text-color, #000);
-  line-height: 1.6;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-}
-
-.background-list li::before {
-  content: '•';
-  position: absolute;
-  left: 0;
-  color: var(--accent-color, #8B25FF);
-  font-weight: 700;
-}
-
-/* 개요 섹션 */
-.overview-section {
-  margin-bottom: var(--spacing-md, 16px);
-}
-
-.overview-card {
-  background: linear-gradient(135deg, rgba(139, 37, 255, 0.05), rgba(139, 37, 255, 0.02));
-  border: 1px solid rgba(139, 37, 255, 0.15);
-  border-radius: var(--radius-md, 12px);
-  padding: var(--spacing-lg, 24px);
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md, 16px);
-}
-
-.overview-item {
-  display: flex;
-  gap: var(--spacing-md, 16px);
-  align-items: flex-start;
-}
-
-.overview-label {
-  min-width: 48px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--accent-color, #8B25FF);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.overview-value {
-  font-size: 0.9375rem;
-  color: var(--text-color, #000);
-  line-height: 1.5;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-}
-
-/* 섹션 타이틀 */
-.section-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--text-color, #000);
-  margin: 0 0 var(--spacing-md, 16px) 0;
-  padding-bottom: var(--spacing-xs, 8px);
-  border-bottom: 2px solid var(--accent-color, #8B25FF);
-  letter-spacing: -0.02em;
-}
-
-/* 목표 섹션 */
-.goals-section {
-  margin-bottom: var(--spacing-md, 16px);
-}
-
-.goals-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm, 12px);
-}
-
-.goals-list li {
-  position: relative;
-  padding-left: 24px;
-  font-size: 0.9375rem;
-  color: var(--text-color, #000);
-  line-height: 1.6;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-}
-
-.goals-list li::before {
-  content: '✓';
-  position: absolute;
-  left: 0;
-  color: var(--accent-color, #8B25FF);
-  font-weight: 700;
-}
-
-/* 프로그램 섹션 */
-.programs-section {
-  margin-bottom: var(--spacing-md, 16px);
-}
-
-.programs-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md, 16px);
-}
-
-.program-card {
+.feed-card {
   background: var(--bg-color, #ffffff);
   border: 1px solid var(--border-color, #e5e5e5);
-  border-radius: var(--radius-md, 12px);
-  padding: var(--spacing-lg, 24px);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.program-card:hover {
-  border-color: var(--accent-color, #8B25FF);
-}
-
-.program-card.clickable {
+  border-radius: 8px;
+  overflow: hidden;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.program-card.clickable:active {
+.feed-card:hover {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.feed-card:active {
   transform: scale(0.99);
 }
 
-.program-header {
+/* 프로필 헤더 */
+.feed-header {
   display: flex;
-  align-items: flex-start;
-  gap: var(--spacing-md, 16px);
-  margin-bottom: var(--spacing-sm, 12px);
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
 }
 
-.program-number {
+.feed-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-color, #8B25FF), #c084fc);
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: var(--accent-color, #8B25FF);
-  color: white;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 700;
-  border-radius: 50%;
   flex-shrink: 0;
 }
 
-.program-info {
-  flex: 1;
-}
-
-.program-info h4 {
-  margin: 0 0 4px 0;
-  font-size: 1.0625rem;
-  font-weight: 700;
-  color: var(--text-color, #000);
-  letter-spacing: -0.02em;
-  line-height: 1.4;
-}
-
-.program-schedule {
-  font-size: 0.8125rem;
-  color: var(--accent-color, #8B25FF);
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-
-.program-summary {
-  margin: 0;
-  font-size: 0.9375rem;
-  color: var(--text-color, #000);
-  line-height: 1.6;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-  padding-left: 48px;
-}
-
-.program-details {
-  margin: var(--spacing-md, 16px) 0 0 0;
-  padding-left: 68px;
-  list-style: none;
-}
-
-.program-details li {
-  position: relative;
-  padding-left: 16px;
-  margin-bottom: var(--spacing-xs, 8px);
-  font-size: 0.875rem;
-  color: var(--text-color, #000);
-  line-height: 1.6;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-}
-
-.program-details li::before {
-  content: '•';
-  position: absolute;
-  left: 0;
-  color: var(--accent-color, #8B25FF);
-}
-
-.program-details li:last-child {
-  margin-bottom: 0;
-}
-
-.program-card .click-hint {
-  padding-left: 48px;
-}
-
-.more-icon {
-  color: var(--accent-color, #8B25FF);
-  font-weight: 700;
-  font-size: 1.5rem;
-  line-height: 1;
-  transition: transform 0.25s ease;
-  flex-shrink: 0;
-}
-
-.program-card.clickable:hover .more-icon {
-  transform: rotate(90deg);
-}
-
-.click-hint {
-  display: block;
-  margin-top: var(--spacing-xs, 8px);
-  color: var(--accent-color, #8B25FF);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-
-/* 정기모임 연계활동 */
-.activities-section {
-  margin-bottom: var(--spacing-md, 16px);
-}
-
-.activities-list {
+.feed-header-text {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm, 12px);
+  min-width: 0;
 }
 
-.activity-item {
-  display: flex;
-  gap: var(--spacing-md, 16px);
-  padding: var(--spacing-md, 16px);
-  background: var(--bg-color, #ffffff);
-  border: 1px solid var(--border-color, #e5e5e5);
-  border-radius: var(--radius-md, 12px);
-}
-
-.activity-date {
-  min-width: 100px;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--accent-color, #8B25FF);
-  letter-spacing: -0.01em;
-}
-
-.activity-content h4 {
-  margin: 0 0 4px 0;
+.feed-username {
   font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--text-color, #000);
-  letter-spacing: -0.02em;
-}
-
-.activity-content p {
-  margin: 0;
-  font-size: 0.875rem;
-  color: #666;
-  line-height: 1.5;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-}
-
-/* 연대사업 */
-.solidarity-section {
-  margin-bottom: var(--spacing-md, 16px);
-}
-
-.solidarity-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md, 16px);
-}
-
-.solidarity-card {
-  background: var(--bg-color, #ffffff);
-  border: 1px solid var(--border-color, #e5e5e5);
-  border-radius: var(--radius-md, 12px);
-  padding: var(--spacing-lg, 24px);
-}
-
-.solidarity-date {
-  display: inline-block;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--accent-color, #8B25FF);
-  margin-bottom: var(--spacing-xs, 8px);
-  letter-spacing: -0.01em;
-}
-
-.solidarity-card h4 {
-  margin: 0 0 var(--spacing-sm, 12px) 0;
-  font-size: 1rem;
   font-weight: 700;
   color: var(--text-color, #000);
   letter-spacing: -0.02em;
-  line-height: 1.4;
-}
-
-.solidarity-card p {
-  margin: 0;
-  font-size: 0.9375rem;
-  color: var(--text-color, #000);
-  line-height: 1.6;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-}
-
-/* MT / 캠프 섹션 */
-.camp-section {
-  margin-bottom: var(--spacing-md, 16px);
-}
-
-.camp-card {
-  background: linear-gradient(135deg, rgba(255, 107, 107, 0.08), rgba(255, 159, 67, 0.05));
-  border: 1px solid rgba(255, 107, 107, 0.25);
-  border-radius: var(--radius-md, 12px);
-  padding: var(--spacing-lg, 24px);
-}
-
-.camp-header {
-  margin-bottom: var(--spacing-sm, 12px);
-}
-
-.camp-schedule {
-  display: inline-block;
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: #ff6b6b;
-  letter-spacing: -0.01em;
-}
-
-.camp-desc {
-  margin: 0 0 var(--spacing-md, 16px) 0;
-  font-size: 1.0625rem;
-  font-weight: 600;
-  color: var(--text-color, #000);
-  line-height: 1.5;
-  letter-spacing: -0.02em;
-}
-
-.camp-details {
-  margin: 0;
-  padding-left: 20px;
-  list-style: none;
-}
-
-.camp-details li {
-  position: relative;
-  padding-left: 16px;
-  margin-bottom: var(--spacing-xs, 8px);
-  font-size: 0.9375rem;
-  color: var(--text-color, #000);
-  line-height: 1.5;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-}
-
-.camp-details li::before {
-  content: '•';
-  position: absolute;
-  left: 0;
-  color: #ff6b6b;
-}
-
-/* 열린 회의 및 교육 */
-.open-meetings-section {
-  margin-bottom: var(--spacing-md, 16px);
-}
-
-.open-meetings-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md, 16px);
-}
-
-.open-meeting-card {
-  background: linear-gradient(135deg, rgba(139, 37, 255, 0.03), rgba(139, 37, 255, 0.01));
-  border: 1px solid rgba(139, 37, 255, 0.15);
-  border-radius: var(--radius-md, 12px);
-  padding: var(--spacing-lg, 24px);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.open-meeting-card:hover {
-  border-color: var(--accent-color, #8B25FF);
-}
-
-.open-meeting-card.clickable {
-  cursor: pointer;
-}
-
-.open-meeting-card.clickable:active {
-  transform: scale(0.99);
-}
-
-.open-meeting-card.clickable:hover .more-icon {
-  transform: rotate(90deg);
-}
-
-.open-meeting-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: var(--spacing-md, 16px);
-  margin-bottom: var(--spacing-sm, 12px);
-}
-
-.open-meeting-title-wrapper {
-  flex: 1;
-}
-
-.open-meeting-card h4 {
-  margin: 0 0 4px 0;
-  font-size: 1.0625rem;
-  font-weight: 700;
-  color: var(--text-color, #000);
-  letter-spacing: -0.02em;
-}
-
-.open-meeting-schedule {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--accent-color, #8B25FF);
-  letter-spacing: -0.01em;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.open-meeting-desc {
-  margin: 0 0 var(--spacing-sm, 12px) 0;
+.feed-label {
+  font-size: 0.8125rem;
+  color: #999;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* 커버 이미지 */
+.feed-cover {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  overflow: hidden;
+  background: #f0f0f0;
+}
+
+.feed-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.feed-photo-count {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.65);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 12px;
+  backdrop-filter: blur(4px);
+}
+
+/* 캡션 */
+.feed-caption {
+  padding: 12px 14px 16px;
+}
+
+.feed-desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
   font-size: 0.9375rem;
   color: var(--text-color, #000);
   line-height: 1.6;
-  font-weight: 500;
+  font-weight: 400;
   letter-spacing: -0.02em;
+  word-break: keep-all;
 }
 
-.open-meeting-details {
-  margin: 0;
-  padding-left: 20px;
-  list-style: none;
+.feed-desc strong {
+  font-weight: 700;
+  margin-right: 4px;
 }
 
-.open-meeting-details li {
-  position: relative;
-  padding-left: 16px;
-  margin-bottom: var(--spacing-xs, 8px);
+.feed-more {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 0.9375rem;
+  color: #999;
+  font-weight: 400;
+}
+
+.loading-indicator {
+  text-align: center;
+  padding: var(--spacing-xl, 32px);
+  color: #888;
   font-size: 0.875rem;
+}
+
+/* ===== 게시글 모달 내부 스타일 ===== */
+.post-description {
+  margin: 0 0 var(--spacing-lg, 24px) 0;
+  font-size: 0.9375rem;
   color: var(--text-color, #000);
-  line-height: 1.5;
+  line-height: 1.7;
   font-weight: 500;
+  letter-spacing: -0.02em;
+  white-space: pre-line;
+}
+
+.post-gallery {
+  margin-bottom: var(--spacing-lg, 24px);
+}
+
+.post-gallery-main {
+  position: relative;
+  background: #f0f0f0;
+  border-radius: var(--radius-md, 8px);
+  overflow: hidden;
+}
+
+.post-gallery-main img {
+  width: 100%;
+  height: auto;
+  display: block;
+  max-height: 400px;
+  object-fit: contain;
+}
+
+.post-gallery-thumbs {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.post-gallery-thumbs img {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  opacity: 0.6;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.post-gallery-thumbs img.active {
+  border-color: var(--accent-color, #8B25FF);
+  opacity: 1;
+}
+
+.post-gallery-thumbs img:hover {
+  opacity: 0.9;
+}
+
+.post-body {
+  line-height: 1.8;
+  font-size: 1rem;
+  color: var(--text-color, #000);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.post-body :deep(h2) {
+  font-size: 1.1875rem;
+  font-weight: 700;
+  color: var(--text-color, #000);
+  margin: var(--spacing-xl, 28px) 0 var(--spacing-sm, 12px) 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color, #e5e5e5);
   letter-spacing: -0.02em;
 }
 
-.open-meeting-details li::before {
-  content: '•';
-  position: absolute;
-  left: 0;
+.post-body :deep(h2:first-child) {
+  margin-top: 0;
+}
+
+.post-body :deep(p) {
+  margin: 0 0 var(--spacing-sm, 12px) 0;
+  line-height: 1.8;
+}
+
+.post-body :deep(strong) {
+  font-weight: 700;
+  color: var(--text-color, #000);
+}
+
+.post-body :deep(blockquote) {
+  margin: var(--spacing-md, 16px) 0;
+  padding: var(--spacing-md, 16px) var(--spacing-lg, 24px);
+  background: #f8f8f8;
+  border-left: 4px solid var(--accent-color, #8B25FF);
+  border-radius: 4px;
+  font-style: italic;
+  color: #333;
+  font-size: 0.9375rem;
+  line-height: 1.8;
+}
+
+.post-body :deep(blockquote p) {
+  margin: 0;
+}
+
+.post-body :deep(ul),
+.post-body :deep(ol) {
+  margin: var(--spacing-sm, 12px) 0;
+  padding-left: 24px;
+}
+
+.post-body :deep(li) {
+  margin-bottom: 8px;
+  line-height: 1.8;
+}
+
+.post-body :deep(ul li)::marker {
   color: var(--accent-color, #8B25FF);
 }
 
-/* 소모임 섹션 */
-.clubs-section {
-  margin-bottom: var(--spacing-md, 16px);
+.post-body :deep(a) {
+  color: var(--accent-color, #8B25FF);
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s ease;
 }
 
-.clubs-list {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+.post-body :deep(a:hover) {
+  text-decoration: underline;
+  opacity: 0.8;
+}
+
+/* ===== 2026 카드 스타일 ===== */
+.plan-cards {
+  display: flex;
+  flex-wrap: wrap;
   gap: var(--spacing-md, 16px);
 }
 
-.club-card {
+.plan-card {
+  width: 100%;
+  box-sizing: border-box;
   background: var(--bg-color, #ffffff);
   border: 1px solid var(--border-color, #e5e5e5);
-  border-radius: var(--radius-md, 12px);
-  padding: var(--spacing-md, 16px);
+  border-radius: var(--radius-lg, 12px);
+  padding: var(--spacing-lg, 24px);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
 }
 
-.club-card h4 {
-  margin: 0 0 var(--spacing-xs, 8px) 0;
+.plan-card.half {
+  width: calc(50% - 8px);
+}
+
+.plan-card.featured {
+  background: linear-gradient(135deg, #f5edff 0%, #ede4ff 100%);
+  border-color: var(--accent-color, #8B25FF);
+  border-width: 2px;
+}
+
+.featured-badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--accent-color, #8B25FF);
+  letter-spacing: 0.02em;
+  margin-bottom: 8px;
+}
+
+.featured-note {
+  margin: 32px 0 32px;
   font-size: 1rem;
+  font-weight: 600;
+  color: #000;
+  line-height: 1.8;
+  letter-spacing: -0.02em;
+  word-break: keep-all;
+}
+
+.featured-note mark {
+  background: linear-gradient(to top, rgba(139, 37, 255, 0.2) 0%, rgba(139, 37, 255, 0.2) 40%, transparent 40%);
+  color: inherit;
+  padding: 0 2px;
+}
+
+.plan-card.featured .plan-card-title {
+  color: var(--accent-color, #8B25FF);
+}
+
+.plan-card:hover {
+  border-color: var(--accent-color, #8B25FF);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.plan-card:active {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.plan-card-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+  margin-bottom: var(--spacing-md, 16px);
+}
+
+.plan-card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-color, #000);
+  margin: 0 0 6px 0;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+
+.plan-card-subtitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #888;
+  margin: 0 0 var(--spacing-md, 16px) 0;
+  letter-spacing: -0.01em;
+}
+
+.plan-card-body {
+  font-size: 1rem;
+  color: var(--text-color, #000);
+  line-height: 1.7;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  margin: 0;
+  flex: 1;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  white-space: pre-line;
+}
+
+.plan-card-cta {
+  display: block;
+  margin-top: var(--spacing-md, 16px);
+  padding-top: var(--spacing-sm, 12px);
+  border-top: 1px solid var(--border-color, #e5e5e5);
+  color: var(--accent-color, #8B25FF);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  transition: opacity 0.2s ease;
+}
+
+.plan-card:hover .plan-card-cta {
+  opacity: 0.8;
+}
+
+/* ===== 임원진 다짐 ===== */
+.leaders-section {
+  margin-top: var(--spacing-lg, 24px);
+  padding-top: var(--spacing-lg, 24px);
+  border-top: 1px solid var(--border-color, #e5e5e5);
+}
+
+.leaders-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.leader-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: #faf8f6;
+  border-radius: var(--radius-lg, 12px);
+}
+
+.leader-photo {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.leader-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 4px;
+}
+
+.leader-name {
+  font-size: 0.9375rem;
   font-weight: 700;
   color: var(--text-color, #000);
   letter-spacing: -0.02em;
 }
 
-.club-card p {
-  margin: 0;
-  font-size: 0.875rem;
-  color: #666;
-  line-height: 1.5;
-  font-weight: 500;
-  letter-spacing: -0.02em;
+.leader-role {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent-color, #8B25FF);
+  letter-spacing: -0.01em;
 }
 
-/* ===== 2025년 결과 스타일 (기존 유지) ===== */
-.card {
-  background: var(--bg-color, #ffffff);
-  border-radius: var(--radius-md, 12px);
-  overflow: hidden;
-  margin-bottom: var(--spacing-lg, 24px);
-  border: 1px solid var(--border-color, #e5e5e5);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+.leader-message {
+  width: 100%;
+  margin: 0;
+  font-size: 0.875rem;
+  color: #555;
+  line-height: 1.7;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  word-break: keep-all;
 }
-.card:hover {
-  transform: translateY(-2px);
+
+/* ===== 소모임 ===== */
+.clubs-section {
+  margin-top: var(--spacing-lg, 24px);
+  padding-top: var(--spacing-lg, 24px);
+  border-top: 1px solid var(--border-color, #e5e5e5);
+}
+
+.club-label {
+  font-weight: 400;
+  color: #888;
+  font-size: 0.875rem;
+}
+
+/* ===== 부가 활동 아코디언 ===== */
+.extras-section {
+  margin-top: var(--spacing-lg, 24px);
+  padding-top: var(--spacing-lg, 24px);
+  border-top: 1px solid var(--border-color, #e5e5e5);
+}
+
+.extras-heading {
+  margin: 0 0 var(--spacing-sm, 12px) 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #999;
+  letter-spacing: -0.01em;
+}
+
+.extra-item {
+  border: 1px solid var(--border-color, #e5e5e5);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+}
+
+.extra-item:last-child {
+  margin-bottom: 0;
+}
+
+.extra-item.open {
   border-color: var(--accent-color, #8B25FF);
 }
-.card.clickable {
+
+.extra-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 16px;
+  background: none;
+  border: none;
   cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-color, #000);
+  letter-spacing: -0.02em;
+  line-height: 1.4;
+  text-align: left;
+  transition: background 0.15s ease;
 }
-.card.clickable:active {
-  transform: scale(0.99);
+
+.extra-title:hover {
+  background: rgba(139, 37, 255, 0.03);
 }
-.card-img-wrapper {
-  position: relative;
-  background: #f0f0f0;
-  width: 100%;
-  overflow: hidden;
+
+.extra-arrow {
+  flex-shrink: 0;
+  font-size: 1.125rem;
+  color: #999;
+  transition: transform 0.2s ease;
+  line-height: 1;
 }
-.card-img-wrapper.square {
-  padding-bottom: 100%;
+
+.extra-item.open .extra-arrow {
+  transform: rotate(90deg);
+  color: var(--accent-color, #8B25FF);
 }
-.card-img-wrapper.square img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+
+.extra-body {
+  padding: 0 16px 16px;
+  animation: extraFadeIn 0.2s ease;
 }
-.card-img-wrapper:not(.square) img {
-  width: 100%;
-  height: auto;
-  display: block;
-  object-fit: contain;
-  max-height: 500px;
+
+.extra-body p {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: #555;
+  line-height: 1.7;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  word-break: keep-all;
+  white-space: pre-line;
 }
+
+@keyframes extraFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== 공통 ===== */
 .photo-nav {
   position: absolute;
   top: 50%;
@@ -895,92 +921,7 @@ const checkImageRatio = (event, idx) => {
 }
 .photo-nav.prev { left: 12px; }
 .photo-nav.next { right: 12px; }
-.photo-indicators {
-  position: absolute;
-  bottom: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 6px;
-  padding: 6px 12px;
-  background: rgba(0, 0, 0, 0.5);
-  border-radius: 20px;
-  backdrop-filter: blur(4px);
-}
-.photo-indicators span {
-  width: 8px;
-  height: 8px;
-  background: rgba(255, 255, 255, 0.4);
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.25s ease;
-}
-.photo-indicators span:hover {
-  background: rgba(255, 255, 255, 0.7);
-}
-.photo-indicators span.active {
-  background: var(--accent-color, #8B25FF);
-  width: 24px;
-  border-radius: 4px;
-}
-.card-body {
-  padding: var(--spacing-lg, 24px);
-}
-.card-header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-sm, 12px);
-}
-.card-title-wrapper {
-  flex: 1;
-}
-.card h4 {
-  margin: 0;
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--text-color, #000);
-  letter-spacing: -0.02em;
-  line-height: 1.4;
-}
-.card-date {
-  display: inline-block;
-  margin-top: 4px;
-  font-size: 0.8125rem;
-  color: var(--accent-color, #8B25FF);
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-.card-content p {
-  margin: 0 0 var(--spacing-md, 16px) 0;
-  color: var(--text-color, #000);
-  font-size: 0.9375rem;
-  line-height: 1.7;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-}
-.card-summary p {
-  margin: 0 0 var(--spacing-xs, 8px) 0;
-  color: var(--text-color, #000);
-  font-size: 0.9375rem;
-  line-height: 1.7;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-}
-.details-list {
-  padding-left: 20px;
-  color: var(--text-color, #000);
-  font-size: 0.875rem;
-  margin: var(--spacing-sm, 12px) 0 0 0;
-  line-height: 1.6;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-}
-.details-list li {
-  margin-bottom: var(--spacing-xs, 8px);
-}
 
-/* 비디오 섹션 */
 .videos-section {
   margin-top: var(--spacing-lg, 24px);
   padding-top: var(--spacing-lg, 24px);
@@ -1002,9 +943,7 @@ const checkImageRatio = (event, idx) => {
   border-radius: var(--radius-md, 12px);
   overflow: hidden;
 }
-.video-wrapper:last-child {
-  margin-bottom: 0;
-}
+.video-wrapper:last-child { margin-bottom: 0; }
 .video-wrapper iframe {
   position: absolute;
   top: 0;
@@ -1014,129 +953,92 @@ const checkImageRatio = (event, idx) => {
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* 모바일 반응형 */
 @media (max-width: 640px) {
-  .overview-card {
-    padding: var(--spacing-md, 16px);
+  /* 피드 */
+  .feed { gap: 20px; }
+  .feed-card { border-radius: 0; border-left: none; border-right: none; }
+  .feed-header { padding: 10px 12px; }
+  .feed-caption { padding: 10px 12px 14px; }
+  .feed-desc { font-size: 0.875rem; }
+
+  /* 모달 내 마크다운 */
+  .post-body { font-size: 0.9375rem; }
+  .post-body :deep(h2) { font-size: 1.0625rem; }
+  .post-body :deep(blockquote) {
+    padding: 12px 14px;
+    margin: 12px 0;
+    font-size: 0.875rem;
   }
-  .overview-item {
-    flex-direction: column;
-    gap: 4px;
-  }
-  .overview-label {
-    min-width: auto;
-  }
-  .section-title {
-    font-size: 1.125rem;
-  }
-  .program-card {
-    padding: var(--spacing-md, 16px);
-  }
-  .program-header {
-    gap: var(--spacing-sm, 12px);
-  }
-  .program-number {
-    width: 28px;
-    height: 28px;
-    font-size: 0.8125rem;
-  }
-  .program-info h4 {
-    font-size: 1rem;
-  }
-  .program-summary,
-  .program-card .click-hint {
-    padding-left: 40px;
-  }
-  .program-details {
-    padding-left: 56px;
-  }
-  .clubs-list {
-    grid-template-columns: 1fr;
-  }
-  .activity-item {
-    flex-direction: column;
-    gap: var(--spacing-xs, 8px);
-  }
-  .activity-date {
-    min-width: auto;
-  }
-  .open-meeting-header {
-    flex-direction: column;
-    gap: var(--spacing-xs, 8px);
-  }
-  .solidarity-card {
-    padding: var(--spacing-md, 16px);
-  }
-  .open-meeting-card {
-    padding: var(--spacing-md, 16px);
-  }
-  .photo-nav {
-    width: 40px;
-    height: 40px;
-    font-size: 18px;
-  }
+  .post-body :deep(ul),
+  .post-body :deep(ol) { padding-left: 20px; }
+  .post-description { font-size: 0.9375rem; }
+
+  /* 사진 갤러리 */
+  .post-gallery-main img { max-height: 300px; }
+  .post-gallery-thumbs img { width: 48px; height: 48px; }
+  .photo-nav { width: 40px; height: 40px; font-size: 18px; }
   .photo-nav.prev { left: 8px; }
   .photo-nav.next { right: 8px; }
-  .card {
-    margin-bottom: var(--spacing-md, 16px);
-  }
-  .card-body {
-    padding: var(--spacing-md, 16px);
-  }
-  .card h4 {
-    font-size: 1rem;
-  }
+
+  /* 카드 */
+  .plan-cards { gap: 12px; }
+  .plan-card { padding: var(--spacing-md, 16px); }
+  .plan-card-icon { font-size: 2rem; margin-bottom: 12px; }
+  .plan-card-title { font-size: 1.0625rem; }
+  .plan-card-subtitle { font-size: 0.75rem; margin-bottom: 12px; }
+  .plan-card-body { font-size: 0.875rem; line-height: 1.6; }
+  .plan-card-cta { font-size: 0.8125rem; margin-top: 12px; padding-top: 10px; }
+
+  /* half 카드 모바일 최적화 */
+  .plan-card.half { width: calc(50% - 6px); }
+  .plan-card.half .plan-card-icon { font-size: 1.75rem; margin-bottom: 10px; }
+  .plan-card.half .plan-card-title { font-size: 0.875rem; }
+  .plan-card.half .plan-card-subtitle { font-size: 0.625rem; margin-bottom: 10px; }
+  .plan-card.half .plan-card-body { font-size: 0.75rem; line-height: 1.5; }
+  .plan-card.half .plan-card-cta { font-size: 0.6875rem; }
+
+  /* 아코디언 */
+  .extra-title { padding: 12px 14px; font-size: 0.875rem; }
+  .extra-body { padding: 0 14px 14px; }
+  .extra-body p { font-size: 0.875rem; }
+
+  /* 임원진 */
+  .leader-card { padding: 14px; }
+  .leader-photo { width: 44px; height: 44px; }
+  .leader-message { font-size: 0.8125rem; }
 }
 
+/* 작은 모바일 (360px 이하) */
 @media (max-width: 360px) {
-  .program-card {
-    padding: var(--spacing-sm, 12px);
-  }
-  .program-number {
-    width: 24px;
-    height: 24px;
-    font-size: 0.75rem;
-  }
-  .program-summary,
-  .program-card .click-hint {
-    padding-left: 36px;
-  }
-  .program-details {
-    padding-left: 52px;
-  }
+  .plan-card.half { width: 100%; }
+  .plan-card-body { font-size: 0.8125rem; }
+  .post-body { font-size: 0.875rem; }
+  .post-body :deep(h2) { font-size: 1rem; }
 }
 
 /* 터치 디바이스 최적화 */
 @media (hover: none) and (pointer: coarse) {
-  .card:hover,
-  .program-card:hover,
-  .open-meeting-card:hover {
+  .feed-card:hover { box-shadow: none; }
+  .feed-card:active { transform: scale(0.99); }
+  .plan-card:hover {
     transform: none;
-    border-color: rgba(139, 37, 255, 0.15);
+    box-shadow: none;
+    border-color: var(--border-color, #e5e5e5);
   }
-  .card.clickable:active,
-  .program-card.clickable:active,
-  .open-meeting-card.clickable:active {
+  .plan-card:active {
     transform: scale(0.98);
     border-color: var(--accent-color, #8B25FF);
   }
-  .photo-nav:hover {
-    transform: translateY(-50%);
-    background: rgba(0, 0, 0, 0.6);
-  }
-  .photo-nav:active {
-    transform: translateY(-50%) scale(0.95);
-    background: rgba(139, 37, 255, 0.8);
-  }
+  .photo-nav:hover { transform: translateY(-50%); background: rgba(0, 0, 0, 0.6); }
+  .photo-nav:active { transform: translateY(-50%) scale(0.95); background: rgba(139, 37, 255, 0.8); }
+  .extra-title:hover { background: transparent; }
+  .extra-title:active { background: rgba(139, 37, 255, 0.03); }
+  .post-gallery-thumbs img:hover { opacity: 0.6; }
+  .post-gallery-thumbs img.active:hover { opacity: 1; }
 }
 </style>

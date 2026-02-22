@@ -100,10 +100,10 @@ onUnmounted(() => {
     border: none;
   }
   .modal-header {
-    padding: 16px 20px;
+    padding: 16px 24px;
     padding-top: max(16px, env(safe-area-inset-top, 0px));
-    padding-left: max(20px, env(safe-area-inset-left, 0px));
-    padding-right: max(20px, env(safe-area-inset-right, 0px));
+    padding-left: max(24px, env(safe-area-inset-left, 0px));
+    padding-right: max(24px, env(safe-area-inset-right, 0px));
     position: sticky;
     top: 0;
   }
@@ -117,9 +117,9 @@ onUnmounted(() => {
     font-size: 2rem;
   }
   .modal-body {
-    padding: 20px;
-    padding-left: max(20px, env(safe-area-inset-left, 0px));
-    padding-right: max(20px, env(safe-area-inset-right, 0px));
+    padding: 24px;
+    padding-left: max(24px, env(safe-area-inset-left, 0px));
+    padding-right: max(24px, env(safe-area-inset-right, 0px));
     padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px));
     font-size: 0.9375rem;
   }

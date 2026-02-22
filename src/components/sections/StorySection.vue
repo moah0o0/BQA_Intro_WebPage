@@ -295,9 +295,9 @@ onUnmounted(() => {
 
 @media (max-width: 640px) {
   .story {
-    padding: 60px 20px 70px;
-    padding-left: max(20px, env(safe-area-inset-left, 0px));
-    padding-right: max(20px, env(safe-area-inset-right, 0px));
+    padding: 60px 24px 70px;
+    padding-left: max(24px, env(safe-area-inset-left, 0px));
+    padding-right: max(24px, env(safe-area-inset-right, 0px));
   }
   .block {
     margin-bottom: 40px;

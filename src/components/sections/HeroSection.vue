@@ -254,9 +254,9 @@ onUnmounted(() => {
 
 @media (max-width: 640px) {
   .hero {
-    padding: 60px 20px 32px;
-    padding-left: max(20px, env(safe-area-inset-left, 0px));
-    padding-right: max(20px, env(safe-area-inset-right, 0px));
+    padding: 60px 24px 32px;
+    padding-left: max(24px, env(safe-area-inset-left, 0px));
+    padding-right: max(24px, env(safe-area-inset-right, 0px));
   }
   .pre-line {
     font-size: 1.4rem;

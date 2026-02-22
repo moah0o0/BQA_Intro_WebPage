@@ -698,7 +698,7 @@ button, a, [role="button"] {
     font-size: 15px;
   }
   .section-wrap {
-    padding: 60px 20px 70px;
+    padding: 60px 24px 70px;
   }
   .section-title {
     font-size: 1.375rem;
@@ -709,7 +709,7 @@ button, a, [role="button"] {
     font-size: 0.875rem;
   }
   .activities-content {
-    padding: 32px 20px 70px;
+    padding: 32px 24px 70px;
   }
   .join-title {
     font-size: 1.375rem;
@@ -728,7 +728,7 @@ button, a, [role="button"] {
     font-size: 0.9375rem;
   }
   .site-footer {
-    padding: 48px 20px 40px;
+    padding: 48px 24px 40px;
   }
   .footer-social-link {
     padding: 10px 16px;

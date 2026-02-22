@@ -76,6 +76,8 @@ onUnmounted(() => {
   max-width: 540px;
   max-height: 90vh;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   border-radius: var(--radius-lg, 16px);
   border: 1px solid var(--border-color, #e5e5e5);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
@@ -92,12 +94,16 @@ onUnmounted(() => {
   .modal-content {
     max-height: 100vh;
     min-height: 100vh;
+    min-height: 100dvh;
     border-radius: 0;
     margin: 0;
     border: none;
   }
   .modal-header {
     padding: 16px 20px;
+    padding-top: max(16px, env(safe-area-inset-top, 0px));
+    padding-left: max(20px, env(safe-area-inset-left, 0px));
+    padding-right: max(20px, env(safe-area-inset-right, 0px));
     position: sticky;
     top: 0;
   }
@@ -106,14 +112,16 @@ onUnmounted(() => {
     padding-right: 40px;
   }
   .close-btn {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     font-size: 2rem;
   }
   .modal-body {
     padding: 20px;
+    padding-left: max(20px, env(safe-area-inset-left, 0px));
+    padding-right: max(20px, env(safe-area-inset-right, 0px));
+    padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px));
     font-size: 0.9375rem;
-    padding-bottom: 40px;
   }
   .modal-body :deep(ul),
   .modal-body :deep(ol) {

@@ -21,23 +21,12 @@
       </nav>
 
       <div class="activities-content">
-        <p v-if="currentProject.type === 'DoneProject'" class="plan-intro">
-          12·3 내란 이후, 부산지역 윤석열 퇴진광장에서 성소수자들은
-          매주 뒤풀이를 하고, 존재를 당당히 드러내는 깃발을 들고서 '무지개존'을 꾸려가며
-          서로에게 든든한 곁이 되어 왔습니다.
-          하지만 연대의 광장이 닫힌 이후, 마주해야 하는 것은
-          차별과 혐오의 세상과 불화해야 하는 삶이었습니다.
-          그래서 2025년 2월 28일, 일상 속에서 서로의 용기가 되어주기로 다짐하며,
-          부산퀴어행동을 발족하게 되었습니다.
-        </p>
-
-        <p v-if="currentProject.type === 'PlanProject'" class="plan-intro muted">
-          퀴어 노동의 문제를 해결하기 위한 조사와 요구, 실천에 본격적으로 나서려면
-          <mark>함께할 사람들이 먼저 모여야 합니다.</mark>
-          일하고 공부하며 살아가는 퀴어들이
-          부담 없이 찾아올 수 있도록 <mark>문턱 낮고 재미있는 모임</mark>을 함께 열어봅시다!
-        </p>
-
+<p v-if="currentProject.type === 'PlanProject'" class="plan-intro muted">
+  퀴어 노동의 문제를 바꾸는 실천은, <mark>사람들이 먼저 연결될 때 시작됩니다.</mark>
+  서로를 만나고, 친해지고, 삶의 고민을 나누고, 함께 해보는 경험이 쌓여야 공동체의 힘도 만들어집니다.
+  그래서 부산퀴어행동은 문턱 낮고 재미있는 모임부터 함께 열어갑니다.
+  <strong>살다 보니 퀴어로 살아가게 된 우리에게, 필요하고 중요한 것들을 함께 나누는 모임부터요!</strong>
+</p>
         <ProjectViewer v-if="currentProject" :data="currentProject" :key="currentProject.title" />
       </div>
     </section>
@@ -67,11 +56,12 @@
             <div v-else-if="joinType === 'supporter'" key="supporter">
               <div v-if="supporterText" v-html="supporterText"></div>
               <div class="donate-card">
+                <div class="donate-icon">💜</div>
                 <p class="donate-label">후원계좌</p>
                 <p class="donate-account">우체국 100-0003-05297</p>
                 <p class="donate-depositor">예금주 : 김찬(부산퀴어행동)</p>
-                <button class="donate-copy-btn" @click="copyAccount">계좌 복사</button>
-                <p class="donate-note"><em>단체의 경우, 후원확인증 발급 가능</em></p>
+                <button class="donate-copy-btn" @click="copyAccount">계좌번호 복사하기</button>
+                <p class="donate-note">단체의 경우, 후원확인증 발급 가능</p>
               </div>
             </div>
           </Transition>
@@ -343,14 +333,14 @@ button, a, [role="button"] {
   font-size: 0.9375rem;
   font-weight: 500;
   line-height: 1.9;
-  color: #555;
+  color: black;
   margin: 0 0 var(--spacing-xl) 0;
   letter-spacing: -0.02em;
   word-break: keep-all;
 }
 
 .plan-intro.muted {
-  color: #000;
+  color: black;
   font-size: 1rem;
   font-weight: 600;
 }
@@ -360,6 +350,8 @@ button, a, [role="button"] {
   color: inherit;
   padding: 0 2px;
 }
+
+
 
 /* ===== 스티키 탭 네비게이션 ===== */
 .sticky-nav {
@@ -464,22 +456,35 @@ button, a, [role="button"] {
 .join-content h3 {
   font-size: 1.25rem;
   font-weight: 800;
-  margin: 0 0 var(--spacing-md) 0;
+  margin: 0 0 var(--spacing-lg) 0;
   letter-spacing: -0.02em;
   color: var(--text-color);
 }
 .join-content h4 {
   font-size: 1rem;
   font-weight: 700;
-  margin: 28px 0 var(--spacing-sm) 0;
+  margin: 32px 0 var(--spacing-sm) 0;
   letter-spacing: -0.02em;
   color: var(--text-color);
   padding-bottom: 8px;
   border-bottom: 1px solid var(--border-color);
 }
+.join-content h4:first-of-type {
+  margin-top: 24px;
+}
 .join-content p {
   margin: var(--spacing-sm) 0;
   color: #444;
+  line-height: 1.85;
+}
+.join-content strong {
+  font-weight: 800;
+  color: var(--text-color);
+}
+.join-content mark {
+  background: linear-gradient(to top, rgba(139, 37, 255, 0.18) 0%, rgba(139, 37, 255, 0.18) 40%, transparent 40%);
+  color: inherit;
+  padding: 0 2px;
 }
 .join-content ul, .join-content ol {
   margin: var(--spacing-sm) 0;
@@ -487,8 +492,11 @@ button, a, [role="button"] {
   color: #555;
 }
 .join-content li {
-  margin-bottom: var(--spacing-xs);
-  line-height: 1.7;
+  margin-bottom: 10px;
+  line-height: 1.75;
+}
+.join-content li::marker {
+  color: var(--accent-color);
 }
 .join-content em {
   font-style: normal;
@@ -519,41 +527,47 @@ button, a, [role="button"] {
 }
 /* 후원 카드 */
 .donate-card {
-  margin-top: 28px;
-  background: #f8f6ff;
-  border: 1px solid rgba(139, 37, 255, 0.15);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-lg);
+  margin-top: 40px;
+  background: #fff;
+  border: 1.5px solid rgba(139, 37, 255, 0.12);
+  border-radius: 16px;
+  padding: 32px 24px 28px;
   text-align: center;
+  box-shadow: 0 2px 16px rgba(139, 37, 255, 0.06);
+}
+.donate-icon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+  line-height: 1;
 }
 .donate-label {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
   color: var(--accent-color);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin: 0 0 var(--spacing-xs) 0;
+  letter-spacing: 0.1em;
+  margin: 0 0 12px 0;
 }
 .donate-account {
-  font-size: 1.25rem;
+  font-size: 1.35rem;
   font-weight: 800;
   color: var(--text-color);
-  margin: var(--spacing-xs) 0;
-  letter-spacing: -0.02em;
+  margin: 0;
+  letter-spacing: -0.01em;
 }
 .donate-depositor {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 500;
-  color: #666;
-  margin: 4px 0 0 0;
+  color: #999;
+  margin: 6px 0 0 0;
 }
 .donate-copy-btn {
-  margin-top: var(--spacing-sm);
-  padding: var(--spacing-xs) var(--spacing-lg);
+  margin-top: 20px;
+  padding: 11px 28px;
   background: var(--accent-color);
   color: #fff;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: 24px;
   font-size: 0.8125rem;
   font-weight: 700;
   cursor: pointer;
@@ -562,17 +576,16 @@ button, a, [role="button"] {
   letter-spacing: -0.01em;
 }
 .donate-copy-btn:hover {
-  opacity: 0.85;
+  background: #7a1fe6;
 }
 .donate-copy-btn:active {
-  transform: scale(0.98);
+  transform: scale(0.97);
 }
 .donate-note {
-  margin: var(--spacing-sm) 0 0 0;
-}
-.donate-note em {
-  font-size: 0.8rem;
-  color: #999;
+  margin: 14px 0 0 0;
+  font-size: 0.75rem;
+  color: #bbb;
+  font-weight: 500;
 }
 /* 탭 전환 애니메이션 */
 .tab-enter-active,
@@ -781,10 +794,10 @@ button, a, [role="button"] {
     background: linear-gradient(to top, rgba(139, 37, 255, 0.45) 0%, rgba(139, 37, 255, 0.45) 50%, transparent 50%);
   }
   .donate-copy-btn:hover {
-    opacity: 1;
+    background: var(--accent-color);
   }
   .donate-copy-btn:active {
-    transform: scale(0.98);
+    transform: scale(0.97);
   }
 }
 </style>

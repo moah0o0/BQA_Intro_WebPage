@@ -3,10 +3,27 @@ import { ref, onMounted, onUnmounted } from 'vue'
 
 const messages = [
   '👷‍♀️ 일하는 퀴어',
-  '🧑‍🎓 취업준비와 학업문제가 고민인 청년 퀴어',
-  '💬️️ 사회가 요구하는 과제들을 따라가기 벅찬 퀴어들',
-  '그 밖에 먹고사는 것이 고민인 모든 퀴어들',
+  '🧑‍🎓 취업준비와 학업이 고민인 청년 퀴어',
+  '💬️️ 사회가 요구하는 과제들을 따라가기 벅찬 퀴어',
+  '🌏 그 밖에 먹고사는 것이 고민인 모든 퀴어',
 ]
+
+// 배경 슬라이드쇼: 각 사업의 첫 번째 사진
+const bgImages = [
+  '/images/2025/1.jpeg',
+  '/images/2025/5.jpeg',
+  '/images/2025/9.jpeg',
+  '/images/2025/13.jpeg',
+  '/images/2025/17.jpeg',
+  '/images/2025/22.jpeg',
+  '/images/2025/28.jpeg',
+  '/images/2025/31.jpeg',
+  '/images/2025/36.jpeg',
+  '/images/2025/40.jpeg',
+  '/images/2025/45.jpeg',
+]
+const currentBg = ref(0)
+let bgInterval = null
 
 const typedText = ref('')
 const showCursor = ref(false)
@@ -79,15 +96,30 @@ async function runCycle() {
 
 onMounted(() => {
   runCycle()
+  bgInterval = setInterval(() => {
+    currentBg.value = (currentBg.value + 1) % bgImages.length
+  }, 4000)
 })
 
 onUnmounted(() => {
   alive = false
+  if (bgInterval) clearInterval(bgInterval)
 })
 </script>
 
 <template>
   <section class="hero">
+    <div class="hero-bg">
+      <img
+        v-for="(src, i) in bgImages"
+        :key="src"
+        :src="src"
+        :class="{ active: currentBg === i }"
+        class="hero-bg-img"
+        alt=""
+      />
+      <div class="hero-bg-overlay"></div>
+    </div>
     <div class="hero-content">
       <div class="slogan-area">
         <p class="pre-line" :class="{ show: preLineShow }">부산퀴어행동은</p>
@@ -97,16 +129,16 @@ onUnmounted(() => {
       </div>
 
       <div class="origin-story" :class="{ show: originShow }">
-        <p class="origin-label">부산퀴어행동은 2025년에 발족했습니다</p>
+        <p class="origin-label">부산지역 퀴어들은</p>
         <p class="origin-text">
-          12·3 내란 이후, 부산지역 윤석열 퇴진광장에서 성소수자들은 매주 뒤풀이를 하고,
-          존재를 당당히 드러내는 깃발을 들고서 '무지개존'을 꾸려가며
-          서로에게 든든한 곁이 되어 왔습니다.
-          하지만 연대의 광장이 닫힌 이후,
-          마주해야 하는 것은 차별과 혐오의 세상과 불화해야 하는 삶이었습니다.
-          그래서 2025년 2월 28일,
-          일상 속에서 서로의 용기가 되어주기로 다짐하며
-          부산퀴어행동을 발족하게 되었습니다.
+          12·3 내란에 맞서 열린 부산지역 윤석열 퇴진광장에서 매주 만나 뒤풀이를 하고, 존재를 당당히 드러내는 깃발을 들고서 '무지개존'을 꾸려가며 서로에게 든든한 곁이 되어 왔습니다.
+          </p>
+        <p class="origin-label">하지만 광장이 닫힌 이후</p>
+        <p class="origin-text">
+          마주해야 하는 것은
+          <mark>변함없는 차별과 혐오의 세상</mark>이었습니다.
+          그래서 2025년 2월 28일, 일상 속에서 서로의 용기가 되어주기로 다짐하며,
+          <strong>부산퀴어행동을 발족하게 되었습니다.</strong>
         </p>
       </div>
 
@@ -123,20 +155,49 @@ onUnmounted(() => {
 <style scoped>
 .hero {
   min-height: 100dvh;
-  background: #ffffff;
+  position: relative;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   padding: 80px 28px 40px;
-  padding-left: max(28px, env(safe-area-inset-left, 0px));
-  padding-right: max(28px, env(safe-area-inset-right, 0px));
+  overflow: hidden;
 }
 
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.hero-bg-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 1.5s ease;
+}
+
+.hero-bg-img.active {
+  opacity: 1;
+}
+
+.hero-bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.82);
+}
+
+
 .hero-content {
+  position: relative;
+  z-index: 1;
   max-width: 600px;
   margin: 0 auto;
   width: 100%;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7), 0 4px 24px rgba(0, 0, 0, 0.5);
 }
 
 .slogan-area {
@@ -148,7 +209,7 @@ onUnmounted(() => {
 .pre-line {
   font-size: 1.6rem;
   font-weight: 800;
-  color: #333;
+  color: rgba(255, 255, 255, 0.9);
   letter-spacing: -0.02em;
   margin-bottom: 12px;
   opacity: 0;
@@ -188,7 +249,7 @@ onUnmounted(() => {
 }
 
 .post-text {
-  color: #1a1a1a;
+  color: rgba(255, 255, 255, 0.95);
   opacity: 0;
   transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -201,7 +262,7 @@ onUnmounted(() => {
 .origin-story {
   margin-top: 40px;
   padding: 24px 0;
-  border-top: 1px solid #e5e5e5;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
   opacity: 0;
   transform: translateY(16px);
   transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
@@ -215,16 +276,16 @@ onUnmounted(() => {
 .origin-label {
   font-size: 0.85rem;
   font-weight: 800;
-  color: var(--accent-color, #8B25FF);
+  color: rgba(180, 140, 255, 1);
   letter-spacing: -0.02em;
   margin-bottom: 12px;
 }
 
 .origin-text {
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 700;
   line-height: 1.9;
-  color: #555;
+  color: rgba(255, 255, 255, 0.9);
   letter-spacing: -0.02em;
   word-break: keep-all;
 }
@@ -234,7 +295,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #888;
+  color: rgba(255, 255, 255, 0.6);
   opacity: 0;
   transition: opacity 0.6s ease;
 }
@@ -247,6 +308,11 @@ onUnmounted(() => {
   animation: bounce 2s infinite;
 }
 
+mark {
+  background: linear-gradient(to top, rgba(180, 140, 255, 0.35) 0%, rgba(180, 140, 255, 0.35) 40%, transparent 40%);
+  color: #fff;
+  padding: 0 2px;
+}
 @keyframes bounce {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(4px); }

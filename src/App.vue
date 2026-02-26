@@ -21,12 +21,6 @@
       </nav>
 
       <div class="activities-content">
-<p v-if="currentProject.type === 'PlanProject'" class="plan-intro muted">
-  퀴어 노동의 문제를 바꾸는 실천은, <mark>사람들이 먼저 연결될 때 시작됩니다.</mark>
-  서로를 만나고, 친해지고, 삶의 고민을 나누고, 함께 해보는 경험이 쌓여야 공동체의 힘도 만들어집니다.
-  그래서 부산퀴어행동은 문턱 낮고 재미있는 모임부터 함께 열어갑니다.
-  <strong>살다 보니 퀴어로 살아가게 된 우리에게, 필요하고 중요한 것들을 함께 나누는 모임부터요!</strong>
-</p>
         <ProjectViewer v-if="currentProject" :data="currentProject" :key="currentProject.title" />
       </div>
     </section>

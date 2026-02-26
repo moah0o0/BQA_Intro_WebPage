@@ -49,16 +49,6 @@
             <span class="plan-card-cta">{{ card.cta }}</span>
           </div>
         </div>
-<p class="featured-note">
-  <mark>혼자서 할 수 있는 건 많지 않으니까요.</mark>
-  <strong>그냥 ‘참여자’로만 머무는 사회운동을 넘어,</strong>
-  세상을 바꾸기 위한 <mark>사회운동에 신박하고 재미있는 방식으로</mark> 함께하고,
-  우리 스스로의 고민과 기획을 담아 행동으로 옮겨봅시다.
-  퀴어들이 모여 <mark>토론하고 실천계획(액션플랜)도 세워보며</mark>,
-  우리 삶을 바꾸기 위한 목소리를 우리 힘으로 내는 과정을 함께 쌓아갑시다.
-  지금은 힘이 작아도 언젠가 더 크게 자랄 수 있도록,
-  <strong>세상을 바꾸는 우리 퀴어들의 힘을 함께 키워봐요!</strong>
-</p>
         <!-- 나머지 카드 -->
         <div class="plan-cards">
           <div
@@ -655,6 +645,10 @@ watch(() => props.data, () => {
   gap: var(--spacing-md, 16px);
 }
 
+.plan-cards + .plan-cards {
+  margin-top: 16px;
+}
+
 .plan-card {
   width: 100%;
   box-sizing: border-box;
@@ -687,21 +681,6 @@ watch(() => props.data, () => {
   margin-bottom: 8px;
 }
 
-.featured-note {
-  margin: 32px 0 32px;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #000;
-  line-height: 1.8;
-  letter-spacing: -0.02em;
-  word-break: keep-all;
-}
-
-.featured-note mark {
-  background: linear-gradient(to top, rgba(139, 37, 255, 0.2) 0%, rgba(139, 37, 255, 0.2) 40%, transparent 40%);
-  color: inherit;
-  padding: 0 2px;
-}
 
 .plan-card.featured .plan-card-title {
   color: var(--accent-color, #8B25FF);

@@ -2,10 +2,10 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 
 const messages = [
-  '👷‍♀️ 일하는 퀴어',
-  '🧑‍🎓 취업준비와 학업이 고민인 청년 퀴어',
-  '💬️️ 사회가 요구하는 과제들을 따라가기 벅찬 퀴어',
-  '🌏 그 밖에 먹고사는 것이 고민인 모든 퀴어',
+  '👷‍♀️ 일하는 퀴어들',
+  '🧑‍🎓 취업준비와 학업이 고민인 청년 퀴어들',
+  '💬️️ 사회가 요구하는 과제들을 따라가기 벅찬 퀴어들',
+  '🌏 그 밖에 먹고사는 것이 고민인 모든 퀴어들',
 ]
 
 // 배경 슬라이드쇼: 각 사업의 첫 번째 사진
@@ -124,7 +124,7 @@ onUnmounted(() => {
       <div class="slogan-area">
         <p class="pre-line" :class="{ show: preLineShow }">부산퀴어행동은</p>
         <h1 class="main-line">
-          <span class="typed">{{ typedText }}</span><span v-if="showCursor" class="cursor">|</span><span class="post-text" :class="{ show: postLineShow }">의 힘으로 세상을 바꾸고 싶습니다.</span>
+          <span class="typed">{{ typedText }}</span><span v-if="showCursor" class="cursor">|</span><span class="post-text" :class="{ show: postLineShow }">과 함께 행동하고 싶어요</span>
         </h1>
       </div>
 
